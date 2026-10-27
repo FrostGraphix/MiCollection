@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PRODUCTS } from '@/lib/products';
 import { ProductCard } from './ProductCard';
 
 export const BudgetShelf: React.FC = () => {
   const shelfRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const cheapProducts = PRODUCTS.filter((p) => p.price <= 10000).sort(
     (a, b) => a.price - b.price
   );
@@ -20,6 +21,58 @@ export const BudgetShelf: React.FC = () => {
       });
     }
   };
+
+  // Desktop click-and-drag horizontal physics from MiCollections.html
+  useEffect(() => {
+    const sh = shelfRef.current;
+    if (!sh) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let moved = 0;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      isDown = true;
+      moved = 0;
+      startX = e.clientX;
+      scrollLeft = sh.scrollLeft;
+      setIsDragging(true);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      moved = Math.abs(dx);
+      sh.scrollLeft = scrollLeft - dx;
+    };
+
+    const handlePointerUp = () => {
+      isDown = false;
+      setTimeout(() => setIsDragging(false), 50);
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      if (moved > 5) {
+        e.preventDefault();
+        e.stopPropagation();
+        moved = 0;
+      }
+    };
+
+    sh.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    sh.addEventListener('click', handleClick, true);
+
+    return () => {
+      sh.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      sh.removeEventListener('click', handleClick, true);
+    };
+  }, []);
 
   return (
     <div className="relative">
@@ -55,7 +108,9 @@ export const BudgetShelf: React.FC = () => {
       {/* Horizontal Scroll Track */}
       <div
         ref={shelfRef}
-        className="flex gap-5 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory"
+        className={`flex gap-5 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory select-none ${
+          isDragging ? 'cursor-grabbing snap-none' : 'cursor-grab'
+        }`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {cheapProducts.map((product) => (
@@ -70,3 +125,4 @@ export const BudgetShelf: React.FC = () => {
     </div>
   );
 };
+

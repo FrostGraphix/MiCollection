@@ -257,3 +257,156 @@ em.serif-italic {
   }
 }
 
+/* ==========================================================
+   Original MiCollections.html Visual & Motion Effects
+   ========================================================== */
+
+/* 1. Reading Progress Bar */
+.prog-bar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--brand), var(--orchid), var(--brand2));
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 2. Hero Headline Line-Up Reveal */
+@keyframes lineUp {
+  from {
+    transform: translateY(110%) rotate(3deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.animate-lineUp {
+  animation: lineUp 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* 3. Button/Badge Pop & Bump */
+@keyframes bump {
+  40% {
+    transform: scale(1.5);
+  }
+}
+
+.animate-bump {
+  animation: bump 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes pop {
+  40% {
+    transform: scale(1.4);
+  }
+}
+
+.animate-pop {
+  animation: pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 4. WhatsApp Pulsing Radar Rings */
+@keyframes ringPulse {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+.animate-ring {
+  animation: ringPulse 2.6s infinite;
+}
+
+.animate-ring-delayed {
+  animation: ringPulse 2.6s infinite 1.3s;
+}
+
+/* 5. Fly to Cart Floating Particle */
+.fly-particle {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -8px var(--brand);
+  background: var(--surface2);
+}
+
+/* 6. Product Detail Cursor Magnifier */
+.zoom-lens {
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: var(--zx, 50%) var(--zy, 50%);
+}
+
+.main-img-stage:hover .zoom-lens {
+  transform: scale(1.7);
+}
+
+/* 7. Toast Banner Animations */
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+.animate-toast-in {
+  animation: toastIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-toast-out {
+  animation: toastOut 0.4s forwards;
+}
+
+/* 8. Magnetic Button Physics */
+.mag {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s, background 0.3s;
+  will-change: transform;
+}
+
+/* 9. Header Sliding Pill Tracker */
+.nl-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--pill);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s;
+  pointer-events: none;
+}
+
+/* 10. Footer Outline Typography Hover */
+.f-wordmark {
+  transition: -webkit-text-stroke-color 0.5s ease, opacity 0.5s ease;
+  user-select: none;
+}
+.f-wordmark:hover {
+  -webkit-text-stroke-color: rgba(192, 38, 211, 0.8) !important;
+  opacity: 0.35 !important;
+}
+
+

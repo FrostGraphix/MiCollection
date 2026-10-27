@@ -114,11 +114,20 @@ export const WhatsAppWidget: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Action Button */}
-      <div className="pointer-events-auto relative">
+      {/* Floating Action Button with Radar Pulsing Rings & Tooltip */}
+      <div className="pointer-events-auto relative flex items-center gap-3">
+        {!isOpen && (
+          <span className="hidden sm:inline-block px-3.5 py-1.5 rounded-full bg-[var(--surface)] text-[var(--ink)] border border-[var(--line)] shadow-lg text-xs font-semibold animate-in fade-in slide-in-from-right-4 duration-500">
+            Need help? Chat with us
+          </span>
+        )}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative w-14 h-14 rounded-full bg-wa text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+          className={`relative w-14 h-14 rounded-full bg-wa text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 ${
+            !isOpen
+              ? 'before:content-[""] before:absolute before:inset-0 before:rounded-full before:border-2 before:border-wa before:animate-ring after:content-[""] after:absolute after:inset-0 after:rounded-full after:border-2 after:border-wa after:animate-ring-delayed'
+              : ''
+          }`}
           style={{ boxShadow: '0 16px 36px -10px rgba(37, 211, 102, 0.7)' }}
           aria-label="Chat on WhatsApp"
         >

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -21,15 +21,82 @@ import { BudgetShelf } from '@/components/shop/BudgetShelf';
 
 import { Product } from '@/types';
 
+// Animated Counter component from MiCollections.html
+const AnimatedCounter: React.FC<{ end: number; suffix?: string }> = ({ end, suffix = '' }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          const startTime = performance.now();
+          const duration = 1400;
+
+          const animate = (time: number) => {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Quartic ease-out from original HTML: 1 - Math.pow(1 - k, 4)
+            const eased = 1 - Math.pow(1 - progress, 4);
+            setCount(Math.round(end * eased));
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.4 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [end]);
+
+  return (
+    <span ref={ref} className="font-variant-numeric tabular-nums">
+      {count}
+      {suffix}
+    </span>
+  );
+};
+
 export default function HomePage() {
   const featuredPicks: Product[] = [16, 4, 7, 10, 13, 20, 23, 22]
     .map((id) => PRODUCTS.find((p) => p.id === id))
     .filter((p): p is Product => Boolean(p));
 
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const heroArtRef = useRef<HTMLDivElement>(null);
+
+  // Desktop Pointer Parallax Effect on Hero Stage from original MiCollections.html heroFX()
+  useEffect(() => {
+    const hero = heroSectionRef.current;
+    const art = heroArtRef.current;
+    if (!hero || !art) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      const rect = art.getBoundingClientRect();
+      const mx = ((e.clientX - (rect.left + rect.width / 2)) / rect.width).toFixed(3);
+      const my = ((e.clientY - (rect.top + rect.height / 2)) / rect.height).toFixed(3);
+      art.style.setProperty('--mx', mx);
+      art.style.setProperty('--my', my);
+    };
+
+    hero.addEventListener('pointermove', handlePointerMove);
+    return () => hero.removeEventListener('pointermove', handlePointerMove);
+  }, []);
+
   return (
     <div className="flex flex-col gap-20 md:gap-28 overflow-hidden">
       {/* Hero Section */}
-      <section className="relative pt-8 md:pt-16 pb-12 overflow-hidden">
+      <section ref={heroSectionRef} className="relative pt-8 md:pt-16 pb-12 overflow-hidden">
         {/* Ambient Gradient Blobs */}
         <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-brand/30 rounded-full blur-[90px] pointer-events-none -z-10" />
         <div className="absolute bottom-[-80px] left-[-100px] w-[420px] h-[420px] bg-orchid/20 rounded-full blur-[80px] pointer-events-none -z-10" />
@@ -42,9 +109,16 @@ export default function HomePage() {
               Open 24 hours &bull; FCT Abuja
             </div>
 
+            {/* Headline with original lineUp reveal */}
             <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.92]">
-              Every variety. <br />
-              <em className="serif-italic">One</em> home.
+              <span className="block overflow-hidden py-1">
+                <span className="inline-block animate-lineUp">Every variety.</span>
+              </span>
+              <span className="block overflow-hidden py-1">
+                <span className="inline-block animate-lineUp [animation-delay:120ms]">
+                  <em className="serif-italic">One</em> home.
+                </span>
+              </span>
             </h1>
 
             <p className="text-base sm:text-lg text-[var(--ink2)] max-w-xl leading-relaxed">
@@ -53,14 +127,14 @@ export default function HomePage() {
 
             {/* CTAs */}
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
-              <Link href="/shop" className="btn-primary text-sm">
+              <Link href="/shop" className="btn-primary text-sm mag">
                 Shop the collection <ArrowRight className="w-4 h-4" />
               </Link>
               <a
                 href={waLink('Hello MiCollections, I would like to place an order.')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-ghost text-sm text-[#16a34a] hover:border-[#16a34a] hover:bg-green-500/10"
+                className="btn-ghost text-sm text-[#16a34a] hover:border-[#16a34a] hover:bg-green-500/10 mag"
               >
                 <MessageSquare className="w-4 h-4" /> Order on WhatsApp
               </a>
@@ -80,13 +154,21 @@ export default function HomePage() {
             </ul>
           </div>
 
-          {/* Right Hero Interactive Cards Stage */}
-          <div className="lg:col-span-5 relative aspect-square max-w-[500px] mx-auto w-full">
+          {/* Right Hero Interactive 3D Parallax Cards Stage */}
+          <div
+            ref={heroArtRef}
+            className="lg:col-span-5 relative aspect-square max-w-[500px] mx-auto w-full"
+            style={{ ['--mx' as any]: 0, ['--my' as any]: 0 }}
+          >
             {/* Card 1: Ultra 2 Watch */}
             <Link
               href="/product/16"
-              className="absolute left-0 top-[2%] w-[48%] aspect-[1/1.18] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl -rotate-6 transition-transform duration-500 hover:rotate-0 hover:scale-105"
-              style={{ boxShadow: 'var(--shadow)' }}
+              className="absolute left-0 top-[2%] w-[48%] aspect-[1/1.18] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl transition-transform duration-300 hover:scale-105"
+              style={{
+                boxShadow: 'var(--shadow)',
+                transform:
+                  'translate(calc(var(--mx, 0) * -14px), calc(var(--my, 0) * -10px)) rotate(-6deg)',
+              }}
             >
               <ProductImage
                 src={byId(16)?.images?.[0]}
@@ -102,8 +184,12 @@ export default function HomePage() {
             {/* Card 2: Wrap Midi Dress */}
             <Link
               href="/product/1"
-              className="absolute right-0 top-[10%] w-[48%] aspect-[1/1.15] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl rotate-6 transition-transform duration-500 hover:rotate-0 hover:scale-105"
-              style={{ boxShadow: 'var(--shadow)' }}
+              className="absolute right-0 top-[10%] w-[48%] aspect-[1/1.15] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl transition-transform duration-300 hover:scale-105"
+              style={{
+                boxShadow: 'var(--shadow)',
+                transform:
+                  'translate(calc(var(--mx, 0) * 18px), calc(var(--my, 0) * 12px)) rotate(6deg)',
+              }}
             >
               <ProductImage
                 src={byId(1)?.images?.[0]}
@@ -119,8 +205,12 @@ export default function HomePage() {
             {/* Card 3: Everyday Tote */}
             <Link
               href="/product/10"
-              className="absolute left-[26%] bottom-[0%] w-[46%] aspect-[1/1.1] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl -rotate-2 transition-transform duration-500 hover:rotate-0 hover:scale-105 z-10"
-              style={{ boxShadow: 'var(--shadow)' }}
+              className="absolute left-[26%] bottom-[0%] w-[46%] aspect-[1/1.1] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl transition-transform duration-300 hover:scale-105 z-10"
+              style={{
+                boxShadow: 'var(--shadow)',
+                transform:
+                  'translate(calc(var(--mx, 0) * -8px), calc(var(--my, 0) * 16px)) rotate(-2deg)',
+              }}
             >
               <ProductImage
                 src={byId(10)?.images?.[0]}
@@ -308,33 +398,33 @@ export default function HomePage() {
 
         {/* 4 Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 text-left">
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
-              24
+              <AnimatedCounter end={24} />
             </b>
             <span className="text-xs text-[var(--ink2)] mt-1 block">
               hours a day, every day, we are open
             </span>
           </div>
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
-              37
+              <AnimatedCounter end={37} />
             </b>
             <span className="text-xs text-[var(--ink2)] mt-1 block">
               states & the FCT we deliver to
             </span>
           </div>
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
-              {CATS.length}
+              <AnimatedCounter end={CATS.length} />
             </b>
             <span className="text-xs text-[var(--ink2)] mt-1 block">
               aisles of fashion, tech & home
             </span>
           </div>
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
-              {PRODUCTS.length}+
+              <AnimatedCounter end={PRODUCTS.length} suffix="+" />
             </b>
             <span className="text-xs text-[var(--ink2)] mt-1 block">
               products and more added weekly

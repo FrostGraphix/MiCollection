@@ -1,11 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Check, ShieldCheck } from 'lucide-react';
 import { money } from '@/lib/utils';
 
 export const HowItWorksPhone: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const stepsContainerRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver to sync active step on scroll, from original MiCollections.html
+  useEffect(() => {
+    if (!stepsContainerRef.current) return;
+    const stepElements = stepsContainerRef.current.querySelectorAll<HTMLElement>('.phone-step');
+    if (!stepElements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const stepIndex = Number(entry.target.getAttribute('data-step') || 0);
+            setActiveStep(stepIndex);
+          }
+        });
+      },
+      { rootMargin: '-35% 0px -35% 0px', threshold: 0.2 }
+    );
+
+    stepElements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   const steps = [
     {
@@ -92,14 +115,15 @@ export const HowItWorksPhone: React.FC = () => {
       </div>
 
       {/* Steps List on Right */}
-      <div className="flex flex-col gap-6">
+      <div ref={stepsContainerRef} className="flex flex-col gap-6">
         {steps.map((step, idx) => {
           const isCurrent = activeStep === idx;
           return (
             <div
               key={idx}
+              data-step={idx}
               onClick={() => setActiveStep(idx)}
-              className={`cursor-pointer p-6 sm:p-8 rounded-3xl border transition-all duration-300 ${
+              className={`phone-step cursor-pointer p-6 sm:p-8 rounded-3xl border transition-all duration-300 ${
                 isCurrent
                   ? 'bg-[var(--surface)] border-brand shadow-xl scale-[1.02]'
                   : 'bg-[var(--surface)]/60 border-[var(--line)] opacity-60 hover:opacity-100'

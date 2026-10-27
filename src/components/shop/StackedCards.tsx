@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CATS, PRODUCTS } from '@/lib/products';
@@ -20,8 +20,42 @@ const CARD_THEMES = [
 ];
 
 export const StackedCards: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic scroll compression and brightness dimming physics from original MiCollections.html
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      const cards = containerRef.current.querySelectorAll<HTMLElement>('.stack-card');
+      if (!cards.length) return;
+
+      const topOffset = 80;
+      cards.forEach((card, idx) => {
+        const nextCard = cards[idx + 1];
+        if (!nextCard) return;
+
+        const h = card.offsetHeight;
+        const stickyTop = topOffset + idx * 14;
+        const nextTop = nextCard.getBoundingClientRect().top;
+        const progress = Math.min(Math.max(1 - (nextTop - stickyTop) / (h * 0.95), 0), 1);
+
+        card.style.transform = `scale(${1 - progress * 0.05})`;
+        card.style.filter = `brightness(${1 - progress * 0.38})`;
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col gap-6 relative">
+    <div ref={containerRef} className="flex flex-col gap-6 relative">
       {CATS.map((cat, i) => {
         const items = PRODUCTS.filter((p) => p.cat === cat.id);
         const fromPrice = Math.min(...items.map((p) => p.price));
@@ -32,11 +66,12 @@ export const StackedCards: React.FC = () => {
         return (
           <article
             key={cat.id}
-            className="sticky rounded-3xl sm:rounded-[36px] overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[460px] md:h-[520px] border border-white/10 shadow-2xl transition-all duration-300"
+            className="stack-card sticky rounded-3xl sm:rounded-[36px] overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[460px] md:h-[520px] border border-white/10 shadow-2xl transition-all duration-300 will-change-transform"
             style={{
               top: `calc(75px + ${i * 12}px)`,
               backgroundColor: theme.bg,
               color: theme.text,
+              transformOrigin: '50% 0',
             }}
           >
             {/* Left Content Column */}

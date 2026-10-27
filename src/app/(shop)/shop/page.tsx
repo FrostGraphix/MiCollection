@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Search, RotateCcw, MessageSquare, SlidersHorizontal } from 'lucide-react';
@@ -18,6 +18,20 @@ function ShopContent() {
   const [searchQuery, setSearchQuery] = useState<string>(initialQ);
   const [sortBy, setSortBy] = useState<'featured' | 'low' | 'high' | 'az'>('featured');
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+
+  // Sync state whenever URL query params change (e.g. from MegaMenu, Footer, or SearchModal)
+  useEffect(() => {
+    const cat = searchParams.get('cat');
+    if (cat) {
+      setSelectedCat(cat);
+    } else if (!searchParams.has('cat')) {
+      setSelectedCat('all');
+    }
+    const q = searchParams.get('q');
+    if (q !== null) {
+      setSearchQuery(q);
+    }
+  }, [searchParams]);
 
   const filteredProducts = useMemo(() => {
     let result = PRODUCTS.filter((p) => {

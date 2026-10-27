@@ -24,6 +24,7 @@ import { ProductImage } from '@/components/shop/ProductImage';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { flyToCart } from '@/lib/effects';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -52,6 +53,7 @@ export default function ProductDetailPage() {
   );
 
   const mainCtaRef = useRef<HTMLDivElement>(null);
+  const mainImgRef = useRef<HTMLDivElement>(null);
 
   const isSaved = isInWishlist(product.id);
   const category = catOf(product.cat);
@@ -69,7 +71,6 @@ export default function ProductDetailPage() {
     const handleScroll = () => {
       if (!mainCtaRef.current) return;
       const rect = mainCtaRef.current.getBoundingClientRect();
-      // Show sticky bar once the main CTA button has scrolled out of view
       setShowStickyBar(rect.bottom < 0);
     };
 
@@ -79,6 +80,9 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     addToCart(product.id, selectedColor, selectedSize, quantity);
+    if (mainImgRef.current) {
+      flyToCart(mainImgRef.current, productImages[activeGalleryView] || productImages[0]);
+    }
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2000);
   };
@@ -86,6 +90,15 @@ export default function ProductDetailPage() {
   const handleBuyNow = () => {
     addToCart(product.id, selectedColor, selectedSize, quantity);
     router.push('/checkout');
+  };
+
+  const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const zx = ((e.clientX - rect.left) / rect.width) * 100;
+    const zy = ((e.clientY - rect.top) / rect.height) * 100;
+    el.style.setProperty('--zx', `${zx}%`);
+    el.style.setProperty('--zy', `${zy}%`);
   };
 
   const whatsappMessage = `Hello MiCollections, I would like to order: ${quantity} x ${product.name} (${PAL[selectedColor]?.n || selectedColor}${selectedSize ? ', Size ' + selectedSize : ''}) at ${money(product.price)} each.`;
@@ -141,7 +154,11 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Main Large Stage */}
-          <div className="relative flex-1 aspect-[1/1.05] sm:aspect-square rounded-3xl sm:rounded-[36px] overflow-hidden bg-[var(--surface2)] border border-[var(--line)] shadow-xl group">
+          <div
+            ref={mainImgRef}
+            onMouseMove={handleImageMouseMove}
+            className="main-img-stage relative flex-1 aspect-[1/1.05] sm:aspect-square rounded-3xl sm:rounded-[36px] overflow-hidden bg-[var(--surface2)] border border-[var(--line)] shadow-xl group"
+          >
             <ProductImage
               src={productImages[activeGalleryView] || productImages[0]}
               alt={`${product.name} view ${activeGalleryView + 1}`}
