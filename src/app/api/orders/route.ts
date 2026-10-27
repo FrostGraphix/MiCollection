@@ -5,8 +5,13 @@ import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { generateOrderText } from '@/lib/utils';
 import { OrderRecord } from '@/types';
 
-// In-memory orders cache for local sandbox testing
+import { INITIAL_ORDERS } from '@/lib/mockOrders';
+
+// In-memory orders cache for local sandbox testing, initialized with 32 orders
 const localOrdersCache: Record<string, OrderRecord> = {};
+INITIAL_ORDERS.forEach((ord) => {
+  localOrdersCache[ord.id] = { ...ord };
+});
 
 export async function POST(request: Request) {
   try {
@@ -242,3 +247,63 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ orders: Object.values(localOrdersCache) });
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, orderStatus, paymentStatus, note } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+    }
+
+    let order = localOrdersCache[id];
+    if (!order) {
+      const found = INITIAL_ORDERS.find((o) => o.id === id);
+      if (found) {
+        order = { ...found };
+        localOrdersCache[id] = order;
+      }
+    }
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (orderStatus) {
+      order.orderStatus = orderStatus;
+    }
+    if (paymentStatus) {
+      order.paymentStatus = paymentStatus;
+    }
+    if (note !== undefined) {
+      order.note = note;
+    }
+
+    localOrdersCache[id] = order;
+
+    // Update in Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        const updatePayload: Record<string, any> = {};
+        if (orderStatus) updatePayload.order_status = orderStatus;
+        if (paymentStatus) updatePayload.payment_status = paymentStatus;
+        if (note !== undefined) updatePayload.note = note;
+
+        await supabase.from('orders').update(updatePayload).eq('id', id);
+      } catch (err) {
+        console.warn('Supabase update order warning:', err);
+      }
+    }
+
+    return NextResponse.json({ success: true, order });
+  } catch (error: any) {
+    console.error('Order update error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+

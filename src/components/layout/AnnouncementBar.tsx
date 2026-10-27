@@ -1,9 +1,14 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { CFG } from '@/lib/products';
 
 export const AnnouncementBar: React.FC = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
   const items = [
     "Customers order, we don't scam. Your money is safe with us",
     'Open 24 hours',

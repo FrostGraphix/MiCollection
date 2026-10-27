@@ -1,11 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageSquare, X, Send } from 'lucide-react';
 import { CFG } from '@/lib/products';
 import { waLink } from '@/lib/utils';
 
 export const WhatsAppWidget: React.FC = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
 

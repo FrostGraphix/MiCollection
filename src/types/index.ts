@@ -63,6 +63,13 @@ export interface Product {
   desc: string;
   feat: string[];
   images: string[];
+  cogs?: number;
+  stock?: number;
+  lowStockThreshold?: number;
+  status?: 'active' | 'draft' | 'archived';
+  slug?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {
@@ -101,6 +108,14 @@ export interface OrderItemRecord {
   image?: string;
 }
 
+export type OrderStatus =
+  | 'received'
+  | 'confirmed'
+  | 'shipped'
+  | 'dispatched'
+  | 'delivered'
+  | 'cancelled';
+
 export interface OrderRecord {
   id: string;
   name: string;
@@ -114,7 +129,7 @@ export interface OrderRecord {
   payLabel: string;
   paymentMethod: string;
   paymentStatus?: 'pending' | 'paid' | 'failed';
-  orderStatus?: 'received' | 'confirmed' | 'shipped' | 'delivered';
+  orderStatus?: OrderStatus;
   fee: number;
   subtotal: number;
   discount: number;
@@ -123,6 +138,7 @@ export interface OrderRecord {
   lines: string[];
   wa: string;
   createdAt?: string;
+  note?: string;
 }
 
 export interface UserProfile {
@@ -133,3 +149,59 @@ export interface UserProfile {
   address?: string;
   state?: string;
 }
+
+export interface DiscountCoupon {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number; // percentage or fixed amount in ₦
+  minSpend?: number; // minimum order spend in ₦
+  expiryDate?: string;
+  usageLimit?: number;
+  usageCount: number;
+  revenueDriven: number; // in ₦
+  isActive: boolean;
+  createdAt?: string;
+  description?: string;
+}
+
+export type CustomerVIPTier = 'VIP Platinum' | 'Gold Member' | 'Regular';
+
+export interface CustomerProfile {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  state: string;
+  address?: string;
+  landmark?: string;
+  totalOrders: number;
+  lifetimeValue: number; // LTV in ₦
+  lastOrderDate: string;
+  tier: CustomerVIPTier;
+  orders?: OrderRecord[];
+}
+
+export type NotificationType =
+  | 'order_new'
+  | 'order_confirmed'
+  | 'order_dispatched'
+  | 'order_delivered'
+  | 'payment_alert'
+  | 'vip_customer'
+  | 'stock_warning'
+  | 'inquiry';
+
+export interface StoreNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: string;
+  orderId?: string;
+  customerName?: string;
+  amount?: number;
+  read: boolean;
+  priority: 'low' | 'normal' | 'high';
+}
+

@@ -2,11 +2,17 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { CATS, CFG } from '@/lib/products';
 import { waLink } from '@/lib/utils';
 import { Phone, Mail, MapPin, Clock, ArrowUp, MessageSquare } from 'lucide-react';
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

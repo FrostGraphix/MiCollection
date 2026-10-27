@@ -399,6 +399,30 @@ em.serif-italic {
   pointer-events: none;
 }
 
+/* MegaMenu Dropdown Transition */
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown-in {
+  animation: dropdownIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-dropdown-in {
+    animation: none !important;
+  }
+}
+
 /* 10. Footer Outline Typography Hover */
 .f-wordmark {
   transition: -webkit-text-stroke-color 0.5s ease, opacity 0.5s ease;

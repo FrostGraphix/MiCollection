@@ -31,6 +31,10 @@ export const HeaderWrapper: React.FC = () => {
     return () => clearTimeout(timer);
   }, [pathname]);
 
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <>
       <ReadingProgressBar />
