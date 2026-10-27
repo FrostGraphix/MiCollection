@@ -25,6 +25,7 @@ const figtree = Figtree({
 
 const instrumentSerif = Instrument_Serif({
   weight: '400',
+  style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-serif',
   display: 'swap',
