@@ -10,9 +10,10 @@ import {
   Sparkles,
   MessageSquare,
 } from 'lucide-react';
-import { PRODUCTS, CATS, CFG } from '@/lib/products';
+import { PRODUCTS, CATS, CFG, byId } from '@/lib/products';
 import { money, waLink } from '@/lib/utils';
 import { ProductArt } from '@/components/shop/ProductArt';
+import { ProductImage } from '@/components/shop/ProductImage';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { StackedCards } from '@/components/shop/StackedCards';
 import { HowItWorksPhone } from '@/components/shop/HowItWorksPhone';
@@ -87,8 +88,12 @@ export default function HomePage() {
               className="absolute left-0 top-[2%] w-[48%] aspect-[1/1.18] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl -rotate-6 transition-transform duration-500 hover:rotate-0 hover:scale-105"
               style={{ boxShadow: 'var(--shadow)' }}
             >
-              <ProductArt type="watch" color="violet" view={0} />
-              <div className="absolute left-2.5 right-2.5 bottom-2.5 px-3 py-1.5 rounded-full bg-[var(--nav-bg)] backdrop-blur-md border border-[var(--line)] flex items-center justify-between text-[11px] font-semibold">
+              <ProductImage
+                src={byId(16)?.images?.[0]}
+                alt="Ultra 2 Amoled Smart Watch"
+                fallbackArt={{ type: 'watch', color: 'violet', view: 0 }}
+              />
+              <div className="absolute left-2.5 right-2.5 bottom-2.5 z-10 px-3 py-1.5 rounded-full bg-[var(--nav-bg)]/90 backdrop-blur-md border border-[var(--line)] flex items-center justify-between text-[11px] font-semibold">
                 <span>Watch</span>
                 <b className="text-brand">{money(25000)}</b>
               </div>
@@ -100,8 +105,12 @@ export default function HomePage() {
               className="absolute right-0 top-[10%] w-[48%] aspect-[1/1.15] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl rotate-6 transition-transform duration-500 hover:rotate-0 hover:scale-105"
               style={{ boxShadow: 'var(--shadow)' }}
             >
-              <ProductArt type="dress" color="orchid" view={1} />
-              <div className="absolute left-2.5 right-2.5 bottom-2.5 px-3 py-1.5 rounded-full bg-[var(--nav-bg)] backdrop-blur-md border border-[var(--line)] flex items-center justify-between text-[11px] font-semibold">
+              <ProductImage
+                src={byId(1)?.images?.[0]}
+                alt="Ankara Wrap Midi Dress"
+                fallbackArt={{ type: 'dress', color: 'orchid', view: 1 }}
+              />
+              <div className="absolute left-2.5 right-2.5 bottom-2.5 z-10 px-3 py-1.5 rounded-full bg-[var(--nav-bg)]/90 backdrop-blur-md border border-[var(--line)] flex items-center justify-between text-[11px] font-semibold">
                 <span>Dress</span>
                 <b className="text-brand">{money(18500)}</b>
               </div>
@@ -113,8 +122,12 @@ export default function HomePage() {
               className="absolute left-[26%] bottom-[0%] w-[46%] aspect-[1/1.1] rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--line)] shadow-2xl -rotate-2 transition-transform duration-500 hover:rotate-0 hover:scale-105 z-10"
               style={{ boxShadow: 'var(--shadow)' }}
             >
-              <ProductArt type="tote" color="plum" view={0} />
-              <div className="absolute left-2.5 right-2.5 bottom-2.5 px-3 py-1.5 rounded-full bg-[var(--nav-bg)] backdrop-blur-md border border-[var(--line)] flex items-center justify-between text-[11px] font-semibold">
+              <ProductImage
+                src={byId(10)?.images?.[0]}
+                alt="Everyday Canvas & Leather Tote"
+                fallbackArt={{ type: 'tote', color: 'plum', view: 0 }}
+              />
+              <div className="absolute left-2.5 right-2.5 bottom-2.5 z-10 px-3 py-1.5 rounded-full bg-[var(--nav-bg)]/90 backdrop-blur-md border border-[var(--line)] flex items-center justify-between text-[11px] font-semibold">
                 <span>Tote Bag</span>
                 <b className="text-brand">{money(24000)}</b>
               </div>
@@ -247,21 +260,33 @@ export default function HomePage() {
           {/* Screenshot floating visuals */}
           <div className="md:col-span-5 relative h-64 sm:h-72">
             <div className="absolute left-[5%] top-[10%] w-36 rounded-2xl bg-white p-2 shadow-2xl -rotate-12 border border-purple-200">
-              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50">
-                <ProductArt type="earrings" color="gold" view={0} />
+              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50 relative">
+                <ProductImage
+                  src={byId(13)?.images?.[0]}
+                  alt="Earrings find"
+                  fallbackArt={{ type: 'earrings', color: 'gold', view: 0 }}
+                />
               </div>
             </div>
             <div className="absolute left-[35%] top-[0%] w-36 rounded-2xl bg-white p-2 shadow-2xl rotate-6 border border-purple-200 z-10">
-              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50">
-                <ProductArt type="sneaker" color="violet" view={1} />
+              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50 relative">
+                <ProductImage
+                  src={byId(7)?.images?.[0]}
+                  alt="Sneaker find"
+                  fallbackArt={{ type: 'sneaker', color: 'violet', view: 1 }}
+                />
               </div>
             </div>
             <div className="absolute right-[5%] top-[25%] w-36 rounded-2xl bg-white p-2 shadow-2xl rotate-12 border border-purple-200">
-              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50">
-                <ProductArt type="crossbody" color="black" view={0} />
+              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50 relative">
+                <ProductImage
+                  src={byId(11)?.images?.[0]}
+                  alt="Crossbody find"
+                  fallbackArt={{ type: 'crossbody', color: 'black', view: 0 }}
+                />
               </div>
             </div>
-            <div className="absolute left-[15%] bottom-2 px-4 py-2 rounded-2xl bg-wa text-black font-semibold text-xs shadow-lg">
+            <div className="absolute left-[15%] bottom-2 px-4 py-2 rounded-2xl bg-wa text-black font-semibold text-xs shadow-lg z-20">
               Found it. {money(16500)}
             </div>
           </div>

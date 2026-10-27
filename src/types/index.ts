@@ -47,6 +47,7 @@ export interface Category {
   blurb: string;
   art: ArtType[];
   cols: ColorKey[];
+  image?: string;
 }
 
 export interface Product {
@@ -61,6 +62,7 @@ export interface Product {
   badge?: string | null;
   desc: string;
   feat: string[];
+  images: string[];
 }
 
 export interface CartItem {
@@ -96,6 +98,7 @@ export interface OrderItemRecord {
   art: ArtType;
   color: ColorKey;
   opt: string;
+  image?: string;
 }
 
 export interface OrderRecord {

@@ -6,6 +6,7 @@ import { Search, X, MessageSquare, ArrowRight } from 'lucide-react';
 import { CATS, PRODUCTS } from '@/lib/products';
 import { money, waLink } from '@/lib/utils';
 import { ProductArt } from './ProductArt';
+import { ProductImage } from './ProductImage';
 import { Product } from '@/types';
 
 interface SearchModalProps {
@@ -144,8 +145,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                     onClick={onClose}
                     className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-[var(--pill)] transition-colors group"
                   >
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0">
-                      <ProductArt type={product.art} color={product.colors[0]} view={0} />
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0 relative">
+                      <ProductImage
+                        src={product.images?.[0]}
+                        alt={product.name}
+                        fallbackArt={{ type: product.art, color: product.colors[0], view: 0 }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <strong className="block font-display text-sm font-semibold truncate group-hover:text-brand transition-colors">

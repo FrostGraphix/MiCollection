@@ -87,6 +87,7 @@ export const CATS: Category[] = [
     blurb: 'Dresses, hoodies and everyday pieces for her, him and everyone.',
     art: ['dress', 'hoodie', 'dress'],
     cols: ['violet', 'black', 'orchid'],
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'abayas',
@@ -94,6 +95,7 @@ export const CATS: Category[] = [
     blurb: 'Flowing, modest and made to turn heads. Open, butterfly and set styles.',
     art: ['abaya', 'abaya', 'abaya'],
     cols: ['black', 'lilac', 'plum'],
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'shoes',
@@ -101,6 +103,7 @@ export const CATS: Category[] = [
     blurb: 'Chunky sneakers, court classics and block heels for every step.',
     art: ['sneaker', 'heel', 'sneaker'],
     cols: ['violet', 'black', 'ivory'],
+    image: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'bags',
@@ -108,6 +111,7 @@ export const CATS: Category[] = [
     blurb: 'Totes that carry the day and chain bags that finish the look.',
     art: ['tote', 'crossbody', 'tote'],
     cols: ['plum', 'black', 'lilac'],
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'jewellery',
@@ -115,6 +119,7 @@ export const CATS: Category[] = [
     blurb: 'Layered chains, pearl drops and stackable rings. Send a screenshot for custom finds.',
     art: ['necklace', 'earrings', 'ring'],
     cols: ['gold', 'silver', 'gold'],
+    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'electronics',
@@ -122,6 +127,7 @@ export const CATS: Category[] = [
     blurb: 'Smart watches, earbuds, power banks and creator lighting.',
     art: ['watch', 'earbuds', 'ledpanel'],
     cols: ['black', 'ivory', 'black'],
+    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'kitchen',
@@ -129,6 +135,7 @@ export const CATS: Category[] = [
     blurb: 'Pot sets, silicone tools and bottles that make cooking a joy.',
     art: ['pot', 'spoons', 'bottles'],
     cols: ['black', 'violet', 'orchid'],
+    image: 'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'home',
@@ -136,6 +143,7 @@ export const CATS: Category[] = [
     blurb: 'Perfume sets, storage, cushions, candles and everyday care.',
     art: ['perfume', 'cushion', 'basket'],
     cols: ['orchid', 'lilac', 'gold'],
+    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
   },
 ];
 
@@ -151,6 +159,12 @@ export const PRODUCTS: Product[] = [
     badge: 'New',
     desc: 'A flattering wrap silhouette with a cinched waist and a skirt that moves when you do. Made for church, brunch and everything after.',
     feat: ['Soft, breathable fabric', 'Wrap front with tie waist', 'Midi length', 'Available in S to XL'],
+    images: [
+      'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 2,
@@ -162,6 +176,12 @@ export const PRODUCTS: Product[] = [
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     desc: 'Heavyweight fleece with a roomy fit, deep hood and kangaroo pocket. One hoodie for both genders, easy to layer.',
     feat: ['Brushed fleece lining', 'Drawstring hood', 'Kangaroo pocket', 'Unisex relaxed fit'],
+    images: [
+      'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 3,
@@ -175,6 +195,12 @@ export const PRODUCTS: Product[] = [
     badge: 'Sale',
     desc: 'Fluid satin with a soft sheen and a dressy drape. A reliable pick for weddings, dinners and photo days.',
     feat: ['Satin finish', 'Flared skirt', 'Concealed back zip', 'Dry clean or gentle hand wash'],
+    images: [
+      'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 4,
@@ -183,10 +209,16 @@ export const PRODUCTS: Product[] = [
     price: 32000,
     art: 'abaya',
     colors: ['black', 'plum', 'ivory'],
-    sizes: ['52', '54', '56', '58'],
+    sizes: ['52','54','56','58'],
     badge: 'New',
     desc: 'Premium nida fabric that stays cool and falls beautifully. Worn open or belted, with wide sleeves and neat cuffs.',
     feat: ['Premium nida fabric', 'Detachable belt', 'Wide sleeves with cuffs', 'Length sizes 52 to 58'],
+    images: [
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 5,
@@ -195,10 +227,16 @@ export const PRODUCTS: Product[] = [
     price: 38500,
     art: 'abaya',
     colors: ['lilac', 'black', 'orchid'],
-    sizes: ['52', '54', '56', '58'],
+    sizes: ['52','54','56','58'],
     badge: 'Trending',
     desc: 'The butterfly cut with generous, flowing sleeves that open like wings. Light, graceful and unmistakably Dubai.',
     feat: ['Butterfly sleeve cut', 'Lightweight crepe', 'Free-flowing fit', 'Length sizes 52 to 58'],
+    images: [
+      'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 6,
@@ -210,6 +248,12 @@ export const PRODUCTS: Product[] = [
     sizes: ['One size'],
     desc: 'A two-piece prayer set in soft, breathable fabric with delicate embroidery at the hem. Comfortable for long wear.',
     feat: ['Two-piece set', 'Hand-finished embroidery', 'Soft breathable fabric', 'Travel friendly'],
+    images: [
+      'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 7,
@@ -218,10 +262,16 @@ export const PRODUCTS: Product[] = [
     price: 28000,
     art: 'sneaker',
     colors: ['violet', 'black', 'ivory'],
-    sizes: ['38', '39', '40', '41', '42', '43', '44', '45'],
+    sizes: ['38','39','40','41','42','43','44','45'],
     badge: 'New',
     desc: 'A chunky sole, cushioned insole and a clean upper that goes with jeans, joggers or a skirt. Comfortable all day.',
     feat: ['Cushioned insole', 'Non-slip chunky sole', 'Padded collar', 'Unisex sizing 38 to 45'],
+    images: [
+      'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 8,
@@ -230,9 +280,15 @@ export const PRODUCTS: Product[] = [
     price: 19500,
     art: 'heel',
     colors: ['black', 'lilac', 'ivory'],
-    sizes: ['36', '37', '38', '39', '40', '41', '42'],
+    sizes: ['36','37','38','39','40','41','42'],
     desc: 'A stable block heel with an ankle strap that holds you steady from the first dance to the last.',
     feat: ['Stable block heel', 'Adjustable ankle strap', 'Padded footbed', 'Sizes 36 to 42'],
+    images: [
+      'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1581101767113-1677fc2beaa8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 9,
@@ -242,10 +298,16 @@ export const PRODUCTS: Product[] = [
     was: 27000,
     art: 'sneaker',
     colors: ['ivory', 'black', 'lilac'],
-    sizes: ['38', '39', '40', '41', '42', '43', '44'],
+    sizes: ['38','39','40','41','42','43','44'],
     badge: 'Sale',
     desc: 'The clean low-top everyone keeps coming back to. Easy to style, easy to wipe clean.',
     feat: ['Low-top cut', 'Wipe-clean upper', 'Flexible sole', 'Sizes 38 to 44'],
+    images: [
+      'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 10,
@@ -257,6 +319,12 @@ export const PRODUCTS: Product[] = [
     badge: 'New',
     desc: 'A roomy structured tote with sturdy handles and a smart interior. Fits a laptop, lunch and everything else.',
     feat: ['Fits a 14 inch laptop', 'Sturdy double handles', 'Inner zip pocket', 'Wipe-clean finish'],
+    images: [
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 11,
@@ -267,6 +335,12 @@ export const PRODUCTS: Product[] = [
     colors: ['black', 'orchid', 'ivory'],
     desc: 'Small enough for the essentials, polished enough for an evening out. Chain strap with an adjustable drop.',
     feat: ['Gold-tone chain strap', 'Magnetic flap closure', 'Fits phone, cards, lipstick', 'Adjustable strap'],
+    images: [
+      'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 12,
@@ -277,6 +351,12 @@ export const PRODUCTS: Product[] = [
     colors: ['lilac', 'black', 'plum'],
     desc: 'Soft quilting and a gleaming clasp for dinners, weddings and nights that matter.',
     feat: ['Quilted texture', 'Detachable chain', 'Satin lining', 'Gold-tone hardware'],
+    images: [
+      'https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 13,
@@ -288,6 +368,12 @@ export const PRODUCTS: Product[] = [
     badge: 'New',
     desc: 'Three delicate chains in graduated lengths with a stone pendant. Wear them together or on their own.',
     feat: ['Three layered chains', 'Stone pendant', 'Tarnish-resistant finish', 'Adjustable length'],
+    images: [
+      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 14,
@@ -298,6 +384,12 @@ export const PRODUCTS: Product[] = [
     colors: ['gold', 'silver'],
     desc: 'Lustrous faux pearls on a slim drop. Light enough for all day, dressy enough for any night.',
     feat: ['Lightweight drop', 'Hypoallergenic posts', 'Pearl finish', 'Gift box ready'],
+    images: [
+      'https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 15,
@@ -306,9 +398,15 @@ export const PRODUCTS: Product[] = [
     price: 6000,
     art: 'ring',
     colors: ['gold', 'silver'],
-    sizes: ['6', '7', '8', '9'],
+    sizes: ['6','7','8','9'],
     desc: 'A set of rings made to be stacked, mixed and swapped. Dainty bands with one statement stone.',
     feat: ['Set of rings', 'Mix and stack', 'Statement stone', 'Sizes 6 to 9'],
+    images: [
+      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 16,
@@ -320,6 +418,12 @@ export const PRODUCTS: Product[] = [
     badge: 'Popular',
     desc: 'The Ultra 2 smart watch with a bright display, call and message alerts, fitness tracking and swappable straps. Message us for the full colour range.',
     feat: ['Bright always-ready display', 'Call and message alerts', 'Fitness and sleep tracking', 'Swappable straps'],
+    images: [
+      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 17,
@@ -330,6 +434,12 @@ export const PRODUCTS: Product[] = [
     colors: ['black'],
     desc: 'A creator-ready LED light kit for content, product shots, video calls and live selling. Lights and prices vary, so message us for the set you need.',
     feat: ['Dimmable panel', 'Adjustable stand', 'Great for content creators', 'Multiple kits available'],
+    images: [
+      'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1527011046414-4781f1f94f8c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 18,
@@ -340,6 +450,12 @@ export const PRODUCTS: Product[] = [
     colors: ['ivory', 'black'],
     desc: 'True wireless earbuds with a pocket charging case, clear calls and deep bass.',
     feat: ['Bluetooth connection', 'Charging case included', 'Touch controls', 'Clear call microphone'],
+    images: [
+      'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 19,
@@ -352,6 +468,12 @@ export const PRODUCTS: Product[] = [
     badge: 'Sale',
     desc: 'Keep every device alive through long days and light-out nights. Fast output and a live battery display.',
     feat: ['20,000mAh capacity', 'Fast charging output', 'Digital level display', 'Charges several devices'],
+    images: [
+      'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 20,
@@ -363,6 +485,12 @@ export const PRODUCTS: Product[] = [
     badge: 'Popular',
     desc: 'A complete set with 18, 20 and 22 cm pots and a 24 cm pan, glass-style lids and a spatula. Non-stick, easy to clean and made for everyday cooking.',
     feat: ['Pots 18, 20 and 22 cm', '24 cm frying pan', 'Non-stick coating', 'Heat-safe handles'],
+    images: [
+      'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 21,
@@ -373,6 +501,12 @@ export const PRODUCTS: Product[] = [
     colors: ['black', 'violet'],
     desc: 'Five silicone cooking tools with sturdy wooden-look handles that will not scratch your pots.',
     feat: ['Five tools in one set', 'Heat-resistant silicone', 'Gentle on non-stick', 'Easy to wash'],
+    images: [
+      'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 22,
@@ -384,6 +518,12 @@ export const PRODUCTS: Product[] = [
     badge: 'New',
     desc: 'Four bottles in graduated sizes with time markers to keep you hydrated. For both genders, kids and adults.',
     feat: ['Four sizes in one set', 'Hourly time markers', 'Leak-proof lids', 'BPA-free plastic'],
+    images: [
+      'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1559839914-1b346d0a794b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 23,
@@ -395,6 +535,12 @@ export const PRODUCTS: Product[] = [
     badge: 'Gift',
     desc: 'A gift package of mini perfumes in a presentation box. Ready to give or keep for yourself.',
     feat: ['Multiple fragrances', 'Presentation gift box', 'Travel friendly sizes', 'Great for gifting'],
+    images: [
+      'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 24,
@@ -405,6 +551,12 @@ export const PRODUCTS: Product[] = [
     colors: ['orchid', 'lilac'],
     desc: 'Strawberry-flavoured gummy supplements in a twin pack. Message us for ingredients, sizes and current price ranges.',
     feat: ['Twin pack', 'Strawberry flavour', 'Chewable gummies', 'Ask us for full details'],
+    images: [
+      'https://images.unsplash.com/photo-1577401239170-897942555fb3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 25,
@@ -415,6 +567,12 @@ export const PRODUCTS: Product[] = [
     colors: ['silver', 'black'],
     desc: 'A compact grooming kit with manicure tools and a stainless tongue scraper. Prices range from 2,000 to 3,500 depending on the set.',
     feat: ['Manicure tools', 'Tongue scraper included', 'Compact carry pouch', 'Several sets available'],
+    images: [
+      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1577401239170-897942555fb3?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 26,
@@ -425,6 +583,12 @@ export const PRODUCTS: Product[] = [
     colors: ['gold', 'ivory'],
     desc: 'Sturdy woven baskets in two sizes for laundry, toys, towels and everything that needs a home.',
     feat: ['Two nesting sizes', 'Sturdy woven build', 'Carry handles', 'Fits shelves and wardrobes'],
+    images: [
+      'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 27,
@@ -436,6 +600,12 @@ export const PRODUCTS: Product[] = [
     badge: 'New',
     desc: 'Two plush, fillable-soft cushions that make any sofa or bed look finished.',
     feat: ['Set of two', 'Soft plush cover', 'Hidden zip', 'Machine washable cover'],
+    images: [
+      'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=800&q=80',
+    ],
   },
   {
     id: 28,
@@ -446,6 +616,12 @@ export const PRODUCTS: Product[] = [
     colors: ['lilac', 'ivory', 'plum'],
     desc: 'Three jar candles in graduated sizes for a calm, warm room.',
     feat: ['Three jar sizes', 'Long, even burn', 'Soft fragrance', 'Reusable jars'],
+    images: [
+      'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1508746829417-e6f548d8d6ed?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80',
+    ],
   },
 ];
 

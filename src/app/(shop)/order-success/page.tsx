@@ -8,6 +8,7 @@ import { ConfettiEffect } from '@/components/ui/Confetti';
 import { OrderRecord } from '@/types';
 import { money, waLink } from '@/lib/utils';
 import { ProductArt } from '@/components/shop/ProductArt';
+import { ProductImage } from '@/components/shop/ProductImage';
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
@@ -150,8 +151,12 @@ function OrderSuccessContent() {
               <div className="space-y-3 max-h-60 overflow-y-auto divide-y divide-[var(--line)]">
                 {order.items.map((it, idx) => (
                   <div key={idx} className="pt-3 first:pt-0 flex items-center gap-3 text-xs">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0">
-                      <ProductArt type={it.art} color={it.color} view={0} />
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0 relative">
+                      <ProductImage
+                        src={it.image}
+                        alt={it.name}
+                        fallbackArt={{ type: it.art, color: it.color, view: 0 }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block font-semibold truncate">{it.name}</span>

@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { OrderRecord } from '@/types';
 import { money, waLink } from '@/lib/utils';
 import { ProductArt } from '@/components/shop/ProductArt';
+import { ProductImage } from '@/components/shop/ProductImage';
 
 export default function AccountPage() {
   const router = useRouter();
@@ -188,8 +189,12 @@ export default function AccountPage() {
                   <div className="space-y-2">
                     {ord.items?.map((it, idx) => (
                       <div key={idx} className="flex items-center gap-3 text-xs">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[var(--surface2)] flex-shrink-0">
-                          <ProductArt type={it.art} color={it.color} view={0} />
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[var(--surface2)] flex-shrink-0 relative">
+                          <ProductImage
+                            src={it.image}
+                            alt={it.name}
+                            fallbackArt={{ type: it.art, color: it.color, view: 0 }}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <span className="block font-medium truncate">{it.name}</span>

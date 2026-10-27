@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { byId, CFG, PAL } from '@/lib/products';
 import { lineKey, money, generateOrderText, waLink } from '@/lib/utils';
 import { ProductArt } from '@/components/shop/ProductArt';
+import { ProductImage } from '@/components/shop/ProductImage';
 
 export default function CartPage() {
   const {
@@ -91,9 +92,13 @@ export default function CartPage() {
                 <div className="flex gap-4 items-center min-w-0">
                   <Link
                     href={`/product/${product.id}`}
-                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0 relative"
                   >
-                    <ProductArt type={product.art} color={item.color} view={0} />
+                    <ProductImage
+                      src={product.images?.[0]}
+                      alt={product.name}
+                      fallbackArt={{ type: product.art, color: item.color, view: 0 }}
+                    />
                   </Link>
 
                   <div className="min-w-0">

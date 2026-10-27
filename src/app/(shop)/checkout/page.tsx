@@ -10,6 +10,7 @@ import { byId, CFG, PAL, STATES } from '@/lib/products';
 import { DeliveryType, PaymentMethod } from '@/types';
 import { money } from '@/lib/utils';
 import { ProductArt } from '@/components/shop/ProductArt';
+import { ProductImage } from '@/components/shop/ProductImage';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -103,6 +104,7 @@ export default function CheckoutPage() {
             art: p?.art || 'tote',
             color: item.color,
             opt: `${PAL[item.color]?.n || item.color}${item.size ? ' / ' + item.size : ''}`,
+            image: p?.images?.[0],
           };
         }),
       };
@@ -498,8 +500,12 @@ export default function CheckoutPage() {
               return (
                 <div key={`${item.id}-${item.color}-${item.size}`} className="flex items-center gap-3 text-xs">
                   <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0">
-                    <ProductArt type={product.art} color={item.color} view={0} />
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-[var(--ink)] text-[var(--bg)] font-bold text-[10px] flex items-center justify-center">
+                    <ProductImage
+                      src={product.images?.[0]}
+                      alt={product.name}
+                      fallbackArt={{ type: product.art, color: item.color, view: 0 }}
+                    />
+                    <span className="absolute -top-1 -right-1 z-10 min-w-[18px] h-[18px] rounded-full bg-[var(--ink)] text-[var(--bg)] font-bold text-[10px] flex items-center justify-center">
                       {item.qty}
                     </span>
                   </div>

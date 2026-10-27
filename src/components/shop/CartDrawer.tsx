@@ -6,6 +6,7 @@ import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { byId, CFG, PAL, PRODUCTS } from '@/lib/products';
 import { lineKey, money } from '@/lib/utils';
+import { ProductImage } from './ProductImage';
 import { ProductArt } from './ProductArt';
 
 export const CartDrawer: React.FC = () => {
@@ -94,9 +95,13 @@ export const CartDrawer: React.FC = () => {
                     <Link
                       href={`/product/${product.id}`}
                       onClick={closeDrawer}
-                      className="w-20 h-20 rounded-2xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0"
+                      className="w-20 h-20 rounded-2xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0 relative"
                     >
-                      <ProductArt type={product.art} color={item.color} view={0} />
+                      <ProductImage
+                        src={product.images?.[0]}
+                        alt={product.name}
+                        fallbackArt={{ type: product.art, color: item.color, view: 0 }}
+                      />
                     </Link>
 
                     {/* Details */}
@@ -169,8 +174,12 @@ export const CartDrawer: React.FC = () => {
                     key={p.id}
                     className="flex items-center justify-between gap-3 p-2 rounded-xl bg-[var(--surface2)] border border-[var(--line)]"
                   >
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white">
-                      <ProductArt type={p.art} color={p.colors[0]} view={0} />
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white relative">
+                      <ProductImage
+                        src={p.images?.[0]}
+                        alt={p.name}
+                        fallbackArt={{ type: p.art, color: p.colors[0], view: 0 }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block font-semibold text-xs truncate">
