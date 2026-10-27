@@ -93,6 +93,40 @@ export default function HomePage() {
     return () => hero.removeEventListener('pointermove', handlePointerMove);
   }, []);
 
+  const marqueeTrackRef = useRef<HTMLDivElement>(null);
+
+  // Big Marquee scroll velocity inertia from MiCollections.html
+  useEffect(() => {
+    const tr = marqueeTrackRef.current;
+    if (!tr) return;
+
+    let x = 0;
+    let last = window.scrollY;
+    let vel = 0;
+    let rafId: number;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const loop = () => {
+      const currentY = window.scrollY;
+      const dy = currentY - last;
+      last = currentY;
+      vel += (dy - vel) * 0.1;
+      x -= (reduced ? 0 : 1.1) + vel * 0.55;
+
+      const half = tr.scrollWidth / 4;
+      if (half > 0) {
+        if (x <= -half) x += half;
+        if (x > 0) x -= half;
+      }
+
+      tr.style.transform = `translate3d(${x}px, 0, 0)`;
+      rafId = requestAnimationFrame(loop);
+    };
+
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
   return (
     <div className="flex flex-col gap-20 md:gap-28 overflow-hidden">
       {/* Hero Section */}
@@ -241,9 +275,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Big Rotated Category Marquee */}
+      {/* Big Rotated Category Marquee with dynamic scroll velocity inertia */}
       <section className="bg-[var(--inv)] text-[var(--inv-ink)] py-5 -rotate-1 -mx-4 border-y border-white/10 select-none overflow-hidden">
-        <div className="animate-marquee flex items-center gap-8 text-3xl sm:text-5xl font-display font-extrabold uppercase tracking-tight">
+        <div
+          ref={marqueeTrackRef}
+          className="flex items-center gap-8 text-3xl sm:text-5xl font-display font-extrabold uppercase tracking-tight will-change-transform"
+        >
           {Array(4)
             .fill(CATS)
             .flat()
@@ -260,14 +297,14 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-6 w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand rv">
               Shop By World
             </span>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-1 max-w-lg">
+            <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-1 max-w-lg rv">
               Eight ways to find your next favourite.
             </h2>
           </div>
-          <p className="text-sm text-[var(--ink2)] max-w-sm leading-relaxed">
+          <p className="text-sm text-[var(--ink2)] max-w-sm leading-relaxed rv">
             Scroll the stack. Each card is a full aisle of our Abuja store, from flowing abayas to kitchen utensil sets.
           </p>
         </div>
@@ -279,10 +316,10 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-6 w-full">
         <div className="flex items-end justify-between gap-6 mb-8">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand rv">
               Picks of the Week
             </span>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-1">
+            <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-1 rv">
               Fresh from the shelves.
             </h2>
           </div>
@@ -296,7 +333,9 @@ export default function HomePage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {featuredPicks.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <div key={product.id} className="rv-s">
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       </section>
@@ -305,10 +344,10 @@ export default function HomePage() {
       <section className="bg-[var(--bg2)] py-16 md:py-24 border-y border-[var(--line)]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-12">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand rv">
               How It Works
             </span>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-1">
+            <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-1 rv">
               Order the way you already chat.
             </h2>
           </div>
@@ -326,13 +365,13 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-6 w-full">
         <div className="rounded-[40px] bg-gradient-to-br from-[#2e1065] via-[#1b073b] to-[#12041f] text-white p-8 sm:p-12 md:p-16 relative overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl">
           <div className="md:col-span-7 flex flex-col gap-4 relative z-10">
-            <span className="text-xs font-semibold uppercase tracking-widest text-brand-light">
+            <span className="text-xs font-semibold uppercase tracking-widest text-brand-light rv">
               Can&apos;t find it?
             </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight leading-tight">
+            <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight leading-tight rv">
               Send a screenshot. We will find it.
             </h2>
-            <p className="text-sm sm:text-base text-purple-200/80 leading-relaxed max-w-lg">
+            <p className="text-sm sm:text-base text-purple-200/80 leading-relaxed max-w-lg rv">
               Saw jewellery, a bag, abaya or a gadget online? Take a screenshot and send it to us on WhatsApp. We will source it for you and quote you the exact price.
             </p>
             <div className="pt-2">
@@ -385,20 +424,20 @@ export default function HomePage() {
 
       {/* Trust Quote & Live Statistics */}
       <section className="max-w-5xl mx-auto px-6 text-center py-6">
-        <span className="text-xs font-semibold uppercase tracking-widest text-brand">
+        <span className="text-xs font-semibold uppercase tracking-widest text-brand rv">
           Our Promise
         </span>
-        <blockquote className="font-display text-4xl sm:text-6xl font-extrabold tracking-tight mt-3 max-w-2xl mx-auto leading-tight">
+        <blockquote className="font-display text-4xl sm:text-6xl font-extrabold tracking-tight mt-3 max-w-2xl mx-auto leading-tight rv">
           Customers order. <br />
           We don&apos;t scam.
         </blockquote>
-        <p className="text-sm sm:text-base text-[var(--ink2)] max-w-xl mx-auto mt-4 leading-relaxed">
+        <p className="text-sm sm:text-base text-[var(--ink2)] max-w-xl mx-auto mt-4 leading-relaxed rv">
           Your money is safe with us. Every order is confirmed with you directly on WhatsApp before anything ships, from Abuja to every state across Nigeria.
         </p>
 
         {/* 4 Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 text-left">
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform rv-s">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
               <AnimatedCounter end={24} />
             </b>
@@ -406,7 +445,7 @@ export default function HomePage() {
               hours a day, every day, we are open
             </span>
           </div>
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform rv-s">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
               <AnimatedCounter end={37} />
             </b>
@@ -414,7 +453,7 @@ export default function HomePage() {
               states & the FCT we deliver to
             </span>
           </div>
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform rv-s">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
               <AnimatedCounter end={CATS.length} />
             </b>
@@ -422,7 +461,7 @@ export default function HomePage() {
               aisles of fashion, tech & home
             </span>
           </div>
-          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform">
+          <div className="p-6 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm hover:-translate-y-1 transition-transform rv-s">
             <b className="block font-display text-3xl sm:text-4xl font-extrabold text-brand">
               <AnimatedCounter end={PRODUCTS.length} suffix="+" />
             </b>

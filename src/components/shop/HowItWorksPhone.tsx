@@ -23,7 +23,7 @@ export const HowItWorksPhone: React.FC = () => {
           }
         });
       },
-      { rootMargin: '-35% 0px -35% 0px', threshold: 0.2 }
+      { rootMargin: '-45% 0px -45% 0px' }
     );
 
     stepElements.forEach((el) => observer.observe(el));
@@ -50,14 +50,14 @@ export const HowItWorksPhone: React.FC = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-      {/* Pinned Sticky Phone on Left */}
-      <div className="lg:sticky lg:top-28 flex flex-col items-center justify-center">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20 items-start">
+      {/* Pinned Sticky Phone on Left (Both Desktop and Mobile) */}
+      <div className="sticky top-[80px] lg:top-28 z-20 flex flex-col items-center justify-center py-2 bg-[var(--bg2)]/95 backdrop-blur-md lg:bg-transparent lg:backdrop-blur-none transition-all">
         <div
-          className="w-full max-w-[340px] rounded-[44px] p-3 bg-[var(--inv)] shadow-2xl border border-purple-400/20"
+          className="w-full max-w-[300px] sm:max-w-[340px] rounded-[38px] sm:rounded-[44px] p-2.5 sm:p-3 bg-[var(--inv)] shadow-2xl border border-purple-400/20"
           style={{ boxShadow: 'var(--shadow)' }}
         >
-          <div className="rounded-[34px] overflow-hidden bg-[#0f0a19] text-[#f7f2ff] flex flex-col h-[460px]">
+          <div className="rounded-[30px] sm:rounded-[34px] overflow-hidden bg-[#0f0a19] text-[#f7f2ff] flex flex-col h-[340px] sm:h-[400px] lg:h-[460px]">
             {/* Phone Header */}
             <div className="flex items-center gap-3 p-4 bg-[#1b1230] border-b border-white/10">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand to-brand-deep text-white flex items-center justify-center font-extrabold text-sm shadow">

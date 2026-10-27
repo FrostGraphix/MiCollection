@@ -71,11 +71,16 @@ export default function ProductDetailPage() {
     const handleScroll = () => {
       if (!mainCtaRef.current) return;
       const rect = mainCtaRef.current.getBoundingClientRect();
-      setShowStickyBar(rect.bottom < 0);
+      const isPast = rect.bottom < 0;
+      setShowStickyBar(isPast);
+      document.body.classList.toggle('has-buybar', isPast);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.body.classList.remove('has-buybar');
+    };
   }, []);
 
   const handleAddToCart = () => {

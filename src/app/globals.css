@@ -409,4 +409,42 @@ em.serif-italic {
   opacity: 0.35 !important;
 }
 
+/* 11. Scroll Reveal Animations (.rv and .rv-s) from MiCollections.html */
+.js .rv {
+  opacity: 0;
+  transform: translateY(34px);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+  transition-delay: var(--d, 0ms);
+}
+.js .rv.in {
+  opacity: 1;
+  transform: none;
+}
+.js .rv-s {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+  transition-delay: var(--d, 0ms);
+}
+.js .rv-s.in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .rv,
+  .js .rv-s {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* 12. Floating WhatsApp Widget Offset with Mobile Sticky Buy Bar */
+.waf-container {
+  transition: bottom 0.4s var(--ease);
+}
+body.has-buybar .waf-container {
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
 

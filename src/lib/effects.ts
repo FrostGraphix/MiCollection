@@ -108,8 +108,164 @@ export function initMagneticButtons() {
   document.addEventListener('pointermove', handlePointerMove);
   document.addEventListener('pointerleave', handlePointerLeave);
 
-  return () => {
+    return () => {
     document.removeEventListener('pointermove', handlePointerMove);
     document.removeEventListener('pointerleave', handlePointerLeave);
   };
 }
+
+let revealObserver: IntersectionObserver | null = null;
+
+/**
+ * Scroll Reveal Observer (.rv and .rv-s) from MiCollections.html
+ * Adds '.in' class when element crosses viewport threshold
+ */
+export function observeReveals() {
+  if (typeof window === 'undefined') return;
+
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            revealObserver?.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -5% 0px' }
+    );
+  }
+
+  const elements = document.querySelectorAll('.rv:not(.in), .rv-s:not(.in)');
+  elements.forEach((el) => revealObserver?.observe(el));
+
+  // Quick fallback check for elements already in viewport
+  setTimeout(() => {
+    document.querySelectorAll<HTMLElement>('.rv:not(.in), .rv-s:not(.in)').forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.98 && rect.bottom > 0) {
+        el.classList.add('in');
+      }
+    });
+  }, 120);
+}
+
+interface SmoothState {
+  y: number;
+  t: number;
+  on: boolean;
+  enabled: boolean;
+  raf: number;
+}
+
+const SM: SmoothState = {
+  y: 0,
+  t: 0,
+  on: false,
+  enabled: false,
+  raf: 0,
+};
+
+function maxScroll() {
+  return typeof document !== 'undefined'
+    ? Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+    : 0;
+}
+
+function inScrollable(el: HTMLElement | null): boolean {
+  let curr = el;
+  while (curr && curr !== document.body) {
+    if (curr.nodeType === 1) {
+      const style = window.getComputedStyle(curr);
+      if (
+        /(auto|scroll)/.test(style.overflowY) &&
+        curr.scrollHeight > curr.clientHeight + 1
+      ) {
+        return true;
+      }
+    }
+    curr = curr.parentElement;
+  }
+  return false;
+}
+
+function smoothLoop() {
+  SM.y += (SM.t - SM.y) * 0.1;
+  if (Math.abs(SM.t - SM.y) < 0.4) {
+    SM.y = SM.t;
+    window.scrollTo(0, SM.y);
+    SM.on = false;
+    return;
+  }
+  window.scrollTo(0, SM.y);
+  SM.raf = requestAnimationFrame(smoothLoop);
+}
+
+/**
+ * Desktop smooth wheel momentum scroll engine ported from MiCollections.html initSmooth()
+ */
+export function initSmoothScroll() {
+  if (typeof window === 'undefined') return () => {};
+  if (
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    window.matchMedia('(pointer: coarse)').matches
+  ) {
+    return () => {};
+  }
+
+  SM.enabled = true;
+  SM.y = SM.t = window.scrollY;
+
+  const handleWheel = (e: WheelEvent) => {
+    if (
+      e.ctrlKey ||
+      e.defaultPrevented ||
+      document.body.classList.contains('locked') ||
+      Math.abs(e.deltaX) > Math.abs(e.deltaY)
+    ) {
+      return;
+    }
+
+    if (inScrollable(e.target as HTMLElement)) return;
+
+    e.preventDefault();
+    const d = e.deltaMode === 1 ? e.deltaY * 34 : e.deltaY;
+    if (!SM.on) SM.t = window.scrollY;
+    SM.t = Math.min(Math.max(SM.t + d, 0), maxScroll());
+    if (!SM.on) {
+      SM.on = true;
+      SM.y = window.scrollY;
+      SM.raf = requestAnimationFrame(smoothLoop);
+    }
+  };
+
+  const handleScroll = () => {
+    if (!SM.on) {
+      SM.y = SM.t = window.scrollY;
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (
+      ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(
+        e.key
+      )
+    ) {
+      cancelAnimationFrame(SM.raf);
+      SM.on = false;
+    }
+  };
+
+  window.addEventListener('wheel', handleWheel, { passive: false });
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    cancelAnimationFrame(SM.raf);
+    window.removeEventListener('wheel', handleWheel);
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('keydown', handleKeyDown);
+  };
+}
+

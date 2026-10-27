@@ -29,18 +29,18 @@ export const StackedCards: React.FC = () => {
       const cards = containerRef.current.querySelectorAll<HTMLElement>('.stack-card');
       if (!cards.length) return;
 
-      const topOffset = 80;
+      const topOffset = 96;
       cards.forEach((card, idx) => {
         const nextCard = cards[idx + 1];
         if (!nextCard) return;
 
         const h = card.offsetHeight;
-        const stickyTop = topOffset + idx * 14;
+        const stickyTop = topOffset + idx * 16;
         const nextTop = nextCard.getBoundingClientRect().top;
         const progress = Math.min(Math.max(1 - (nextTop - stickyTop) / (h * 0.95), 0), 1);
 
         card.style.transform = `scale(${1 - progress * 0.05})`;
-        card.style.filter = `brightness(${1 - progress * 0.38})`;
+        card.style.filter = `brightness(${1 - progress * 0.4})`;
       });
     };
 
@@ -66,9 +66,9 @@ export const StackedCards: React.FC = () => {
         return (
           <article
             key={cat.id}
-            className="stack-card sticky rounded-3xl sm:rounded-[36px] overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[460px] md:h-[520px] border border-white/10 shadow-2xl transition-all duration-300 will-change-transform"
+            className="stack-card sticky rounded-3xl sm:rounded-[36px] overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[430px] h-[min(74vh,560px)] border border-white/10 shadow-2xl transition-all duration-300 will-change-transform"
             style={{
-              top: `calc(75px + ${i * 12}px)`,
+              top: `calc(96px + ${i * 16}px)`,
               backgroundColor: theme.bg,
               color: theme.text,
               transformOrigin: '50% 0',

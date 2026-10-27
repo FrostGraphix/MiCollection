@@ -135,7 +135,7 @@ export const CATS: Category[] = [
     blurb: 'Pot sets, silicone tools and bottles that make cooking a joy.',
     art: ['pot', 'spoons', 'bottles'],
     cols: ['black', 'violet', 'orchid'],
-    image: 'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'home',
@@ -486,7 +486,7 @@ export const PRODUCTS: Product[] = [
     desc: 'A complete set with 18, 20 and 22 cm pots and a 24 cm pan, glass-style lids and a spatula. Non-stick, easy to clean and made for everyday cooking.',
     feat: ['Pots 18, 20 and 22 cm', '24 cm frying pan', 'Non-stick coating', 'Heat-safe handles'],
     images: [
-      'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80',
@@ -504,7 +504,7 @@ export const PRODUCTS: Product[] = [
     images: [
       'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
     ],
   },
@@ -520,8 +520,8 @@ export const PRODUCTS: Product[] = [
     feat: ['Four sizes in one set', 'Hourly time markers', 'Leak-proof lids', 'BPA-free plastic'],
     images: [
       'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1559839914-1b346d0a794b?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1584990347449-a2928d3637e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
     ],
   },
