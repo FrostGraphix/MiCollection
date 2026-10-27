@@ -34,12 +34,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
 
   const [isMegaOpen, setIsMegaOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [mobileShopExpanded, setMobileShopExpanded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
 
   const headerRef = useRef<HTMLElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const navWrapRef = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLElement>(null);
   const shopLinkRef = useRef<HTMLAnchorElement>(null);
@@ -91,17 +93,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
     };
   }, [isMobileMenuOpen]);
 
-  // Click outside, Escape key, and focusout to close mega menu
+  // Click outside, Escape key, and focusout to close mega menu and mobile profile dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setIsMegaOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileMenuOpen(false);
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsMegaOpen(false);
+        setIsProfileMenuOpen(false);
         setIsMobileMenuOpen(false);
       }
     };
@@ -109,6 +115,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
     const handleFocusOut = (e: FocusEvent) => {
       if (headerRef.current && !headerRef.current.contains(e.relatedTarget as Node)) {
         setIsMegaOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.relatedTarget as Node)) {
+        setIsProfileMenuOpen(false);
       }
     };
 
@@ -198,6 +207,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
   // Close menus on route navigation
   useEffect(() => {
     setIsMegaOpen(false);
+    setIsProfileMenuOpen(false);
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
@@ -334,10 +344,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
               )}
             </button>
 
-            {/* Wishlist */}
+            {/* Wishlist (Desktop) */}
             <Link
               href="/wishlist"
-              className="group/wishlist relative w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+              className="hidden sm:flex group/wishlist relative w-10 h-10 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
               aria-label="Wishlist"
               title="Saved items"
             >
@@ -349,11 +359,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
               )}
             </Link>
 
-            {/* Cart Button */}
+            {/* Cart Button (Desktop) */}
             <button
               id="headerCartBtn"
               onClick={openDrawer}
-              className="group/cart relative w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+              className="hidden sm:flex group/cart relative w-10 h-10 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
               aria-label="Shopping cart"
               title="View shopping bag"
             >
@@ -365,21 +375,118 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
               )}
             </button>
 
-            {/* User Account / Login */}
-            <Link
-              href={user ? '/account' : '/login'}
-              className="group/user w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
-              aria-label="Account"
-              title={user ? 'Your Account' : 'Sign in / Register'}
-            >
-              {user ? (
-                <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm group-hover/user:scale-105 transition-transform duration-200">
-                  {user.email?.charAt(0) || 'U'}
+            {/* User Account / Profile with Mobile Dropdown (Favourite & Cart under Profile on Mobile) */}
+            <div ref={profileRef} className="relative">
+              {/* Desktop Link Directly to Account */}
+              <Link
+                href={user ? '/account' : '/login'}
+                className="hidden sm:flex group/user w-10 h-10 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+                aria-label="Account"
+                title={user ? 'Your Account' : 'Sign in / Register'}
+              >
+                {user ? (
+                  <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm group-hover/user:scale-105 transition-transform duration-200">
+                    {user.email?.charAt(0) || 'U'}
+                  </div>
+                ) : (
+                  <UserIcon className="w-5 h-5 transition-transform duration-200 group-hover/user:scale-110" />
+                )}
+              </Link>
+
+              {/* Mobile Profile Trigger (Toggles Favourite & Cart Under Profile Icon) */}
+              <button
+                type="button"
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className={`sm:hidden group/user relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  isProfileMenuOpen
+                    ? 'bg-[var(--pill)] text-brand'
+                    : 'hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand'
+                }`}
+                aria-label="Account, favourites and cart menu"
+                aria-expanded={isProfileMenuOpen}
+              >
+                {user ? (
+                  <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm">
+                    {user.email?.charAt(0) || 'U'}
+                  </div>
+                ) : (
+                  <UserIcon className="w-5 h-5" />
+                )}
+                {/* Total badge for items in Cart + Wishlist on mobile */}
+                {(cartCount > 0 || wishlist.length > 0) && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brand text-white font-bold text-[10px] flex items-center justify-center shadow-sm">
+                    {cartCount + wishlist.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Mobile Profile Dropdown: Favourite and Cart Under Profile Icon */}
+              {isProfileMenuOpen && (
+                <div
+                  className="sm:hidden absolute right-0 top-[calc(100%+10px)] w-64 p-3 rounded-2xl bg-[var(--surface)]/95 backdrop-blur-2xl border border-[var(--line)] shadow-2xl z-50 animate-dropdown-in"
+                  style={{ boxShadow: 'var(--shadow)' }}
+                >
+                  {/* Account / User Link */}
+                  <Link
+                    href={user ? '/account' : '/login'}
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[var(--pill)] transition-colors border-b border-[var(--line)] mb-1"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm">
+                      {user ? user.email?.charAt(0) || 'U' : <UserIcon className="w-4 h-4" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <strong className="block font-display text-sm font-semibold truncate text-[var(--ink)]">
+                        {user ? user.email?.split('@')[0] : 'My Account'}
+                      </strong>
+                      <small className="text-xs text-[var(--mute)]">
+                        {user ? 'View profile & orders' : 'Sign in / Register'}
+                      </small>
+                    </div>
+                  </Link>
+
+                  {/* Favourite Under Profile Icon */}
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand transition-colors text-sm font-medium"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Heart className="w-4 h-4 text-pink-500" />
+                      <span>Favourite</span>
+                    </span>
+                    {wishlist.length > 0 ? (
+                      <span className="min-w-[20px] h-[20px] px-1.5 rounded-full bg-brand text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                        {wishlist.length}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[var(--mute)]">0</span>
+                    )}
+                  </Link>
+
+                  {/* Cart Under Profile Icon */}
+                  <button
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      openDrawer();
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand transition-colors text-sm font-medium"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <ShoppingBag className="w-4 h-4 text-brand" />
+                      <span>Cart</span>
+                    </span>
+                    {cartCount > 0 ? (
+                      <span className="cart-badge min-w-[20px] h-[20px] px-1.5 rounded-full bg-brand text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                        {cartCount}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[var(--mute)]">Empty</span>
+                    )}
+                  </button>
                 </div>
-              ) : (
-                <UserIcon className="w-5 h-5 transition-transform duration-200 group-hover/user:scale-110" />
               )}
-            </Link>
+            </div>
 
             {/* Mobile Hamburger Menu Toggle */}
             <button
@@ -473,27 +580,57 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
             );
           })}
 
-          <Link
-            href="/wishlist"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="font-display text-2xl font-bold py-3.5 border-b border-white/10 hover:text-brand-light flex items-center justify-between"
-          >
-            <span>Saved Items</span>
-            <span className="text-xs font-normal text-purple-300">
-              {wishlist.length} items
-            </span>
-          </Link>
+          {/* Account Profile Section with Favourite and Cart Underneath */}
+          <div className="border-b border-white/10 py-3 mt-1">
+            <Link
+              href={user ? '/account' : '/login'}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="font-display text-2xl sm:text-3xl font-bold hover:text-brand-light flex items-center justify-between py-2"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm">
+                  {user ? user.email?.charAt(0) || 'U' : <UserIcon className="w-4 h-4" />}
+                </div>
+                <span>{user ? 'My Account' : 'Sign in / Register'}</span>
+              </div>
+              <span className="text-xs font-normal text-purple-300 truncate max-w-[140px]">
+                {user ? user.email?.split('@')[0] : 'Join'}
+              </span>
+            </Link>
 
-          <Link
-            href={user ? '/account' : '/login'}
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="font-display text-2xl font-bold py-3.5 border-b border-white/10 hover:text-brand-light flex items-center justify-between"
-          >
-            <span>{user ? 'My Account' : 'Sign in / Register'}</span>
-            <span className="text-xs font-normal text-purple-300">
-              {user ? user.email : 'Join'}
-            </span>
-          </Link>
+            {/* Under Profile: Favourite and Cart */}
+            <div className="pl-11 flex flex-col gap-1 mt-1">
+              <Link
+                href="/wishlist"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between py-2 text-purple-200 hover:text-white transition-colors"
+              >
+                <span className="flex items-center gap-2.5 text-base font-medium">
+                  <Heart className="w-4 h-4 text-pink-400" />
+                  <span>Favourite</span>
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white font-semibold">
+                  {wishlist.length}
+                </span>
+              </Link>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openDrawer();
+                }}
+                className="flex items-center justify-between py-2 text-purple-200 hover:text-white transition-colors text-left"
+              >
+                <span className="flex items-center gap-2.5 text-base font-medium">
+                  <ShoppingBag className="w-4 h-4 text-brand-light" />
+                  <span>Shopping Cart</span>
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white font-semibold">
+                  {cartCount}
+                </span>
+              </button>
+            </div>
+          </div>
         </nav>
 
         <div className="mt-8 pt-6 border-t border-white/10 text-sm text-purple-200 flex flex-col gap-2">
