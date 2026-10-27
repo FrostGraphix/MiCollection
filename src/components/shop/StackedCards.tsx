@@ -55,7 +55,7 @@ export const StackedCards: React.FC = () => {
   }, []);
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-6 relative">
+    <div ref={containerRef} className="flex flex-col gap-8 pb-12 relative">
       {CATS.map((cat, i) => {
         const items = PRODUCTS.filter((p) => p.cat === cat.id);
         const fromPrice = Math.min(...items.map((p) => p.price));
@@ -66,12 +66,13 @@ export const StackedCards: React.FC = () => {
         return (
           <article
             key={cat.id}
-            className="stack-card sticky rounded-3xl sm:rounded-[36px] overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[430px] h-[min(74vh,560px)] border border-white/10 shadow-2xl transition-all duration-300 will-change-transform"
+            className="stack-card sticky rounded-3xl sm:rounded-[36px] overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[430px] h-[min(74vh,560px)] border border-white/10 will-change-transform"
             style={{
               top: `calc(96px + ${i * 16}px)`,
               backgroundColor: theme.bg,
               color: theme.text,
               transformOrigin: '50% 0',
+              boxShadow: '0 -24px 60px -30px rgba(0, 0, 0, 0.5)',
             }}
           >
             {/* Left Content Column */}

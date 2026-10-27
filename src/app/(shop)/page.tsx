@@ -128,7 +128,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-20 md:gap-28 overflow-hidden">
+    <div className="flex flex-col gap-20 md:gap-28">
       {/* Hero Section */}
       <section ref={heroSectionRef} className="relative pt-8 md:pt-16 pb-12 overflow-hidden">
         {/* Ambient Gradient Blobs */}
