@@ -67,7 +67,12 @@ const AnimatedCounter: React.FC<{ end: number; suffix?: string }> = ({ end, suff
 };
 
 export default function HomePage() {
-  const featuredPicks: Product[] = [16, 4, 7, 10, 13, 20, 23, 22]
+  // Dual sliding shelves for "Picks of the Week"
+  const row1Picks: Product[] = [16, 4, 7, 10, 2, 5, 18, 9]
+    .map((id) => PRODUCTS.find((p) => p.id === id))
+    .filter((p): p is Product => Boolean(p));
+
+  const row2Picks: Product[] = [13, 20, 22, 23, 14, 1, 11, 21]
     .map((id) => PRODUCTS.find((p) => p.id === id))
     .filter((p): p is Product => Boolean(p));
 
@@ -312,9 +317,9 @@ export default function HomePage() {
         <StackedCards />
       </section>
 
-      {/* Picks of the Week Grid */}
-      <section className="max-w-7xl mx-auto px-6 w-full">
-        <div className="flex items-end justify-between gap-6 mb-8">
+      {/* Picks of the Week: Dual-Row Horizontal Sliding Shelves */}
+      <section className="w-full overflow-hidden py-4">
+        <div className="max-w-7xl mx-auto px-6 mb-8 flex items-end justify-between gap-6">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-brand rv">
               Picks of the Week
@@ -331,12 +336,31 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {featuredPicks.map((product) => (
-            <div key={product.id} className="rv-s">
-              <ProductCard product={product} />
-            </div>
-          ))}
+        {/* Dual Horizontal Sliding Shelves with Elegant Edge Fade Vignette */}
+        <div className="flex flex-col gap-6 md:gap-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]">
+          {/* Row 1: Sliding Left */}
+          <div className="animate-shelf-left flex items-center gap-5 sm:gap-6 select-none">
+            {[...row1Picks, ...row1Picks].map((product, idx) => (
+              <div
+                key={`row1-${product.id}-${idx}`}
+                className="w-[260px] sm:w-[280px] md:w-[300px] flex-shrink-0"
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+
+          {/* Row 2: Sliding Right (Reverse Direction) */}
+          <div className="animate-shelf-right flex items-center gap-5 sm:gap-6 select-none">
+            {[...row2Picks, ...row2Picks].map((product, idx) => (
+              <div
+                key={`row2-${product.id}-${idx}`}
+                className="w-[260px] sm:w-[280px] md:w-[300px] flex-shrink-0"
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

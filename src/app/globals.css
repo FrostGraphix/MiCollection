@@ -447,4 +447,50 @@ body.has-buybar .waf-container {
   bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
+/* 13. Dual-Row Horizontal Sliding Shelves for Picks of the Week */
+@keyframes shelfSlideLeft {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes shelfSlideRight {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-shelf-left {
+  display: flex;
+  width: max-content;
+  animation: shelfSlideLeft 50s linear infinite;
+  will-change: transform;
+}
+
+.animate-shelf-right {
+  display: flex;
+  width: max-content;
+  animation: shelfSlideRight 50s linear infinite;
+  will-change: transform;
+}
+
+.animate-shelf-left:hover,
+.animate-shelf-right:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shelf-left,
+  .animate-shelf-right {
+    animation: none !important;
+  }
+}
+
+
 
