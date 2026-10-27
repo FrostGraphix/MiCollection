@@ -65,6 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
 
   useEffect(() => {
     const handleScroll = () => {
+      if (isMobileMenuOpen) return;
       const currentScrollY = window.scrollY;
       setIsScrolled(currentScrollY > 30);
 
@@ -80,14 +81,17 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    document.body.classList.toggle('locked', isMobileMenuOpen);
   }, [isMobileMenuOpen]);
 
-  // Click outside and Escape key to close mega menu
+  // Lock body scroll when mobile menu is open (with defensive cleanup)
+  useEffect(() => {
+    document.body.classList.toggle('locked', isMobileMenuOpen);
+    return () => {
+      document.body.classList.remove('locked');
+    };
+  }, [isMobileMenuOpen]);
+
+  // Click outside, Escape key, and focusout to close mega menu
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
@@ -102,14 +106,28 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
       }
     };
 
+    const handleFocusOut = (e: FocusEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.relatedTarget as Node)) {
+        setIsMegaOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside, { passive: true });
     document.addEventListener('keydown', handleKeyDown);
+
+    const headerEl = headerRef.current;
+    if (headerEl) {
+      headerEl.addEventListener('focusout', handleFocusOut);
+    }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      if (headerEl) {
+        headerEl.removeEventListener('focusout', handleFocusOut);
+      }
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     };
   }, []);
@@ -135,7 +153,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
     const wrapRect = wrap.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
     pill.style.width = `${targetRect.width}px`;
-    pill.style.transform = `translateX(${targetRect.left - wrapRect.left}px)`;
+    pill.style.height = `${targetRect.height}px`;
+    pill.style.transform = `translate(${targetRect.left - wrapRect.left}px, ${targetRect.top - wrapRect.top}px)`;
     pill.style.opacity = '1';
   }, []);
 
@@ -152,6 +171,20 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
     const activeEl = wrap.querySelector<HTMLElement>('.nl-active');
     movePill(activeEl);
   }, [isMegaOpen, movePill]);
+
+  // Synchronize pill position on mount and window resize
+  useEffect(() => {
+    const handleResize = () => resetPill();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [resetPill]);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      resetPill();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [resetPill]);
 
   // Sync pill whenever path or mega menu open status changes
   useEffect(() => {
@@ -362,6 +395,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
         {/* Full-width MegaMenu Dropdown */}
         {isMegaOpen && (
           <div
+            className="hidden lg:block"
             onMouseEnter={openMega}
             onMouseLeave={() => closeMega(220)}
           >

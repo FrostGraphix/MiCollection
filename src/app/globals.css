@@ -391,12 +391,12 @@ em.serif-italic {
   position: absolute;
   left: 0;
   top: 0;
-  height: 100%;
   border-radius: 999px;
   background: var(--pill);
   opacity: 0;
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
   pointer-events: none;
+  will-change: transform, width, height, opacity;
 }
 
 /* MegaMenu Dropdown Transition */

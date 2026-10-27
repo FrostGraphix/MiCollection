@@ -49,18 +49,18 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-light mb-4">
               Shop Categories
             </h4>
-            <ul className="flex flex-col gap-2.5 text-sm text-purple-200/80">
-              {CATS.slice(0, 6).map((cat) => (
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-purple-200/80">
+              {CATS.map((cat) => (
                 <li key={cat.id}>
                   <Link
                     href={`/shop?cat=${cat.id}`}
-                    className="hover:text-white hover:translate-x-1 inline-block transition-transform"
+                    className="hover:text-white hover:translate-x-1 inline-block transition-transform truncate"
                   >
                     {cat.name}
                   </Link>
                 </li>
               ))}
-              <li>
+              <li className="col-span-2 pt-1">
                 <Link
                   href="/shop"
                   className="text-brand-light font-medium hover:text-white transition-colors"
@@ -105,6 +105,15 @@ export const Footer: React.FC = () => {
               <li>
                 <Link href="/account" className="hover:text-white transition-colors">
                   My Orders & Profile
+                </Link>
+              </li>
+              <li className="pt-2 border-t border-white/10 mt-1">
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-1.5 text-xs text-brand-light hover:text-white transition-colors font-semibold"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>Admin Operations Console &rarr;</span>
                 </Link>
               </li>
             </ul>

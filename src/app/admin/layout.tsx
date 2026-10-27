@@ -1,27 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useTheme } from '@/context/ThemeContext';
-import { StoreNotification } from '@/types';
-import {
-  ShoppingBag,
-  Tag,
-  Users,
-  Bell,
-  Sun,
-  Moon,
-  ExternalLink,
-  CheckCheck,
-  AlertCircle,
-  Truck,
-  CreditCard,
-  Crown,
-  ChevronRight,
-  Shield,
-  Sparkles,
-} from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { getAdminSession, AdminUser, setAdminSession, DEMO_ADMINS } from '@/lib/adminAuth';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AudioAlert } from '@/components/admin/AudioAlert';
+import { Loader2, ShieldCheck } from 'lucide-react';
 
 export default function AdminLayout({
   children,
@@ -29,272 +14,105 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
 
-  const [notifications, setNotifications] = useState<StoreNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [session, setSession] = useState<AdminUser | null>(null);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Fetch notifications
-  const loadNotifications = async () => {
-    try {
-      const res = await fetch('/api/admin/notifications');
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      }
-    } catch (err) {
-      console.warn('Could not load notifications:', err);
-    }
-  };
+  const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    // If we are on the login portal, no verification needed
+    if (isLoginPage) {
+      setIsVerifying(false);
+      return;
+    }
 
-  // Mark all as read
-  const handleMarkAllRead = async () => {
-    try {
-      const res = await fetch('/api/admin/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markAllRead: true }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications);
-        setUnreadCount(0);
+    // Check active session
+    let currentSession = getAdminSession();
+
+    // In local sandbox / demo, if no session is set, auto-initialize with Super Admin
+    if (!currentSession) {
+      currentSession = {
+        id: 'adm_super_admin',
+        email: DEMO_ADMINS.super_admin.email,
+        name: DEMO_ADMINS.super_admin.name,
+        role: 'super_admin',
+        roleTitle: DEMO_ADMINS.super_admin.roleTitle,
+        avatar: DEMO_ADMINS.super_admin.avatar,
+        department: DEMO_ADMINS.super_admin.department,
+        lastLogin: new Date().toISOString(),
+      };
+      setAdminSession(currentSession);
+    }
+
+    setSession(currentSession);
+    setIsVerifying(false);
+
+    const handleAuthChange = (e: Event) => {
+      const custom = e as CustomEvent<{ user: AdminUser | null }>;
+      const nextUser = custom.detail?.user;
+      if (!nextUser && !isLoginPage) {
+        setSession(null);
+        router.replace('/admin/login');
+      } else {
+        setSession(nextUser || null);
       }
-    } catch (err) {
-      console.warn('Could not mark notifications read:', err);
-    }
-  };
+    };
 
-  const navLinks = [
-    {
-      href: '/admin/orders',
-      label: 'Orders & Fulfillment',
-      icon: ShoppingBag,
-      match: '/admin/orders',
-    },
-    {
-      href: '/admin/discounts',
-      label: 'Promo Codes & Discounts',
-      icon: Tag,
-      match: '/admin/discounts',
-    },
-    {
-      href: '/admin/customers',
-      label: 'Customer CRM',
-      icon: Users,
-      match: '/admin/customers',
-    },
-  ];
+    window.addEventListener('mc:admin-auth', handleAuthChange as EventListener);
+    return () => {
+      window.removeEventListener('mc:admin-auth', handleAuthChange as EventListener);
+    };
+  }, [pathname, isLoginPage, router]);
 
-  const getNotifIcon = (type: StoreNotification['type']) => {
-    switch (type) {
-      case 'order_new':
-        return <ShoppingBag className="w-3.5 h-3.5 text-blue-500" />;
-      case 'payment_alert':
-        return <CreditCard className="w-3.5 h-3.5 text-emerald-500" />;
-      case 'order_dispatched':
-        return <Truck className="w-3.5 h-3.5 text-amber-500" />;
-      case 'vip_customer':
-        return <Crown className="w-3.5 h-3.5 text-purple-500" />;
-      case 'stock_warning':
-      default:
-        return <AlertCircle className="w-3.5 h-3.5 text-rose-500" />;
-    }
-  };
+  // Clean presentation without layout frame on the login portal
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  // Luxury loading state while verifying admin authentication
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg)] text-[var(--ink)]">
+        <div className="relative mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand via-brand-deep to-orchid flex items-center justify-center text-white shadow-xl shadow-brand/20">
+            <ShieldCheck className="w-7 h-7 animate-pulse" />
+          </div>
+          <Loader2 className="w-6 h-6 animate-spin text-brand absolute -bottom-2 -right-2" />
+        </div>
+        <h3 className="font-display font-bold text-lg">Securing Admin Session</h3>
+        <p className="text-xs text-[var(--mute)] mt-1">Authenticating MiCollections Operations Core...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)] flex flex-col font-sans transition-colors duration-300">
-      {/* Admin Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[var(--nav-bg)] backdrop-blur-xl border-b border-[var(--line)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          
-          {/* Brand Mark */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/orders"
-              className="flex items-center gap-2.5 group"
-            >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-brand-deep text-white flex items-center justify-center font-extrabold text-sm shadow-md group-hover:scale-105 transition-transform">
-                Mi
-              </div>
-              <div>
-                <span className="font-display font-bold text-lg tracking-tight text-[var(--ink)]">
-                  Mi<b className="text-brand">Collections</b>
-                </span>
-                <span className="ml-2 text-[10px] font-bold uppercase tracking-widest text-brand bg-brand/10 px-2 py-0.5 rounded-full border border-brand/20">
-                  Admin Hub
-                </span>
-              </div>
-            </Link>
-          </div>
+    <div className="min-h-screen flex bg-[var(--bg)] text-[var(--ink)] antialiased selection:bg-brand/20">
+      {/* Background Audio Alert procedural synthesizer */}
+      <div className="hidden" aria-hidden="true">
+        <AudioAlert showTestButton={false} />
+      </div>
 
-          {/* Navigation Links (Desktop) */}
-          <nav className="hidden md:flex items-center gap-1.5 bg-[var(--surface2)]/80 p-1 rounded-2xl border border-[var(--line)]">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname?.startsWith(link.match);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
-                    isActive
-                      ? 'bg-brand text-white shadow-md shadow-purple-500/20'
-                      : 'text-[var(--mute)] hover:text-[var(--ink)] hover:bg-purple-500/10'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+      {/* Desktop / Mobile Admin Sidebar */}
+      <AdminSidebar
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
 
-          {/* Controls: Storefront, Notifications, Theme */}
-          <div className="flex items-center gap-2">
-            
-            {/* View Storefront Link */}
-            <Link
-              href="/"
-              target="_blank"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--ink2)] hover:text-brand hover:bg-purple-500/10 border border-[var(--line)] transition-colors"
-            >
-              <span>View Store</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-            </Link>
-
-            {/* Notification Bell Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className="relative p-2 rounded-xl text-[var(--mute)] hover:text-[var(--ink)] hover:bg-purple-500/10 border border-[var(--line)] transition-colors"
-                aria-label="Open notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center animate-pulse">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Notification Drawer */}
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-[var(--surface)] text-[var(--ink)] border border-purple-500/20 shadow-2xl overflow-hidden z-50">
-                  <div className="p-3.5 border-b border-[var(--line)] flex items-center justify-between bg-[var(--surface2)]/80">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs uppercase tracking-wider text-brand">
-                        Store Alerts
-                      </span>
-                      {unreadCount > 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-bold">
-                          {unreadCount} new
-                        </span>
-                      )}
-                    </div>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllRead}
-                        className="text-[11px] text-brand hover:underline flex items-center gap-1 font-semibold"
-                      >
-                        <CheckCheck className="w-3 h-3" /> Mark all read
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="max-h-80 overflow-y-auto divide-y divide-[var(--line)] text-xs">
-                    {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-[var(--mute)]">
-                        No notifications right now.
-                      </div>
-                    ) : (
-                      notifications.map((notif) => (
-                        <div
-                          key={notif.id}
-                          className={`p-3 hover:bg-purple-500/5 transition-colors flex items-start gap-2.5 ${
-                            !notif.read ? 'bg-purple-500/5' : ''
-                          }`}
-                        >
-                          <div className="mt-0.5 p-1 rounded-lg bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0">
-                            {getNotifIcon(notif.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline justify-between gap-1">
-                              <h4 className="font-bold text-xs text-[var(--ink)] truncate">
-                                {notif.title}
-                              </h4>
-                              <span className="text-[10px] text-[var(--mute)] flex-shrink-0">
-                                {notif.timestamp}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-[var(--mute)] mt-0.5 leading-snug">
-                              {notif.message}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Dark / Light Mode Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl text-[var(--mute)] hover:text-[var(--ink)] hover:bg-purple-500/10 border border-[var(--line)] transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-brand" />
-              )}
-            </button>
-          </div>
-
-        </div>
-
-        {/* Mobile Navigation Tabs */}
-        <div className="md:hidden flex items-center justify-around border-t border-[var(--line)] bg-[var(--surface2)]/90 px-2 py-1.5">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname?.startsWith(link.match);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  isActive
-                    ? 'bg-brand text-white shadow-sm'
-                    : 'text-[var(--mute)] hover:text-[var(--ink)]'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{link.label.split(' ')[0]}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </header>
-
-      {/* Main Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        {children}
-      </main>
-
-      {/* Minimal Admin Footer */}
-      <footer className="border-t border-[var(--line)] py-4 text-center text-xs text-[var(--mute)]">
-        MiCollections Store Management Suite • Domain 4: Orders, WhatsApp, CRM & Notification Pipeline
-      </footer>
+      {/* Main Content Area */}
+      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+        <AdminHeader
+          onToggleMobileMenu={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 space-y-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

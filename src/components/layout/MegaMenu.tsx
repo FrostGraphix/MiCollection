@@ -13,6 +13,14 @@ interface MegaMenuProps {
 
 export const MegaMenu: React.FC<MegaMenuProps> = ({ onClose }) => {
   const pathname = usePathname();
+  const [activeCat, setActiveCat] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setActiveCat(params.get('cat'));
+    }
+  }, [pathname]);
 
   return (
     <div
@@ -29,12 +37,17 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ onClose }) => {
         <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
           {CATS.map((cat) => {
             const count = PRODUCTS.filter((p) => p.cat === cat.id).length;
+            const isSelected = pathname === '/shop' && activeCat === cat.id;
             return (
               <Link
                 key={cat.id}
                 href={`/shop?cat=${cat.id}`}
                 onClick={onClose}
-                className="group relative flex items-center gap-3 p-2.5 rounded-2xl border border-transparent hover:border-brand/20 hover:bg-[var(--pill)] transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-sm"
+                className={`group relative flex items-center gap-3 p-2.5 rounded-2xl border transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-sm ${
+                  isSelected
+                    ? 'bg-[var(--pill)] border-brand/35 shadow-sm'
+                    : 'border-transparent hover:border-brand/20 hover:bg-[var(--pill)]'
+                }`}
               >
                 {/* Art Thumbnail */}
                 <div className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 bg-[var(--surface2)] border border-[var(--line)] group-hover:border-brand/40 group-hover:bg-brand/10 group-hover:shadow-md transition-all duration-300 flex items-center justify-center relative">

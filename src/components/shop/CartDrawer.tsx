@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { byId, CFG, PAL, PRODUCTS } from '@/lib/products';
@@ -10,6 +11,7 @@ import { ProductImage } from './ProductImage';
 import { ProductArt } from './ProductArt';
 
 export const CartDrawer: React.FC = () => {
+  const pathname = usePathname();
   const {
     cart,
     cartCount,
@@ -22,7 +24,7 @@ export const CartDrawer: React.FC = () => {
     addToCart,
   } = useCart();
 
-  if (!isDrawerOpen) return null;
+  if (pathname?.startsWith('/admin') || !isDrawerOpen) return null;
 
   const freeThreshold = CFG.freeOver;
   const currentTotal = subtotal - discount;
