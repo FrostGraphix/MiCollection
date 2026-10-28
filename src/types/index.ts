@@ -141,6 +141,11 @@ export interface OrderRecord {
   createdAt?: string;
   note?: string;
   userId?: string;
+  carrier?: string;
+  trackingNumber?: string;
+  riderName?: string;
+  riderPhone?: string;
+  dispatchNote?: string;
 }
 
 export interface UserProfile {
@@ -219,5 +224,45 @@ export interface StoreNotification {
   amount?: number;
   read: boolean;
   priority: 'low' | 'normal' | 'high';
+}
+
+export interface TrackingMilestone {
+  step: 'received' | 'confirmed' | 'dispatched' | 'delivered' | 'cancelled';
+  title: string;
+  description: string;
+  timestamp?: string;
+  completed: boolean;
+  current: boolean;
+}
+
+export interface OrderTrackingInfo {
+  orderId: string;
+  orderStatus: OrderStatus;
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentMethod: string;
+  payLabel: string;
+  createdAt: string;
+  updatedAt?: string;
+  eta: string;
+  deliveryLabel: string;
+  carrier?: string;
+  trackingNumber?: string;
+  riderName?: string;
+  riderPhone?: string;
+  dispatchNote?: string;
+  destination: {
+    name: string;
+    city: string;
+    state: string;
+    addressMasked: string;
+  };
+  items: OrderItemRecord[];
+  subtotal: number;
+  fee: number;
+  discount: number;
+  total: number;
+  milestones: TrackingMilestone[];
+  progressPercent: number;
+  waSupportUrl: string;
 }
 

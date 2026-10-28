@@ -6,12 +6,13 @@ import { generateOrderText } from '@/lib/utils';
 import { byId } from '@/lib/products';
 import { OrderItemRecord, OrderRecord, OrderStatus } from '@/types';
 
-import { localOrdersCache } from '@/lib/ordersCache';
+import { localOrdersCache, parseOrderDispatchInfo } from '@/lib/ordersCache';
 
 export const dynamic = 'force-dynamic';
 
 const isValidUUID = (id: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+
 
 function mapDbOrderToRecord(ord: any): OrderRecord {
   const items: OrderItemRecord[] = (ord.order_items || []).map((it: any) => {
@@ -27,6 +28,8 @@ function mapDbOrderToRecord(ord: any): OrderRecord {
       image: it.image || prod?.images?.[0] || undefined,
     };
   });
+
+  const dispatchInfo = parseOrderDispatchInfo(ord.note);
 
   const record: OrderRecord = {
     id: ord.id,
@@ -58,6 +61,11 @@ function mapDbOrderToRecord(ord: any): OrderRecord {
     wa: '',
     createdAt: ord.created_at,
     note: ord.note || undefined,
+    carrier: ord.carrier || dispatchInfo.carrier,
+    trackingNumber: ord.tracking_number || dispatchInfo.trackingNumber,
+    riderName: ord.rider_name || dispatchInfo.riderName,
+    riderPhone: ord.rider_phone || dispatchInfo.riderPhone,
+    dispatchNote: ord.dispatch_note || dispatchInfo.dispatchNote,
   };
   record.wa = generateOrderText(record);
   return record;
@@ -349,7 +357,23 @@ export async function PATCH(request: Request) {
     const paymentStatus = (body.paymentStatus || body.payment_status) as 'pending' | 'paid' | 'failed' | undefined;
     const paymentMethod = body.paymentMethod || body.payment_method;
     const payLabel = body.payLabel || body.pay_label;
-    const note = body.note;
+    let note = body.note;
+    const carrier = body.carrier;
+    const trackingNumber = body.trackingNumber || body.tracking_number;
+    const riderName = body.riderName || body.rider_name;
+    const riderPhone = body.riderPhone || body.rider_phone;
+    const dispatchNote = body.dispatchNote || body.dispatch_note;
+
+    if (carrier || trackingNumber || riderName || riderPhone || dispatchNote) {
+      note = JSON.stringify({
+        carrier: carrier || undefined,
+        trackingNumber: trackingNumber || undefined,
+        riderName: riderName || undefined,
+        riderPhone: riderPhone || undefined,
+        dispatchNote: dispatchNote || (note && !note.startsWith('{') ? note : undefined),
+      });
+    }
+
     const paystackRef = body.paystackRef || body.paystack_ref;
 
     if (!id) {
