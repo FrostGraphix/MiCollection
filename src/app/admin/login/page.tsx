@@ -20,10 +20,9 @@ import {
   Sparkles,
 } from 'lucide-react';
 import {
-  validateAdminCredentials,
-  setAdminSession,
+  signInAdminWithSupabase,
   getAdminSession,
-  DEMO_ADMINS,
+  ADMIN_PRESETS,
   AdminRole,
 } from '@/lib/adminAuth';
 
@@ -46,7 +45,7 @@ export default function AdminLoginPage() {
   }, [router]);
 
   const handleSelectDemoPreset = (role: AdminRole) => {
-    const cred = DEMO_ADMINS[role];
+    const cred = ADMIN_PRESETS[role];
     if (cred) {
       setEmail(cred.email);
       setPassword(cred.password);
@@ -65,19 +64,20 @@ export default function AdminLoginPage() {
     setIsLoading(true);
     setErrorMsg('');
 
-    // Simulate realistic security handshake verification
-    setTimeout(() => {
-      const user = validateAdminCredentials(email, password);
+    try {
+      const res = await signInAdminWithSupabase(email, password);
 
-      if (user) {
-        setAdminSession(user);
+      if (res.error || !res.user) {
+        setErrorMsg(res.error || 'Invalid administrative credentials.');
+        setIsLoading(false);
+      } else {
         router.push('/admin');
         router.refresh();
-      } else {
-        setErrorMsg('Invalid administrative credentials. Please verify or use a Demo Preset below.');
-        setIsLoading(false);
       }
-    }, 450);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Authentication failed. Please check your connection.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -222,7 +222,7 @@ export default function AdminLoginPage() {
                 <label className="block text-xs font-semibold text-[var(--ink)]">
                   Security Passphrase
                 </label>
-                <span className="text-[11px] text-[var(--mute)]">Demo: admin123</span>
+                <span className="text-[11px] text-emerald-500 font-medium">Supabase Auth Verified</span>
               </div>
               <div className="relative">
                 <input

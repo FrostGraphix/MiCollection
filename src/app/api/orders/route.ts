@@ -5,7 +5,6 @@ import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { generateOrderText } from '@/lib/utils';
 import { byId } from '@/lib/products';
 import { OrderItemRecord, OrderRecord, OrderStatus } from '@/types';
-import { INITIAL_ORDERS } from '@/lib/mockOrders';
 
 import { localOrdersCache } from '@/lib/ordersCache';
 
@@ -241,6 +240,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const userId = searchParams.get('userId');
+  const email = searchParams.get('email');
 
   // Case 1: Fetch single order by ID
   if (id) {
@@ -258,12 +258,15 @@ export async function GET(request: Request) {
           localOrdersCache[mappedOrder.id] = mappedOrder;
           return NextResponse.json({ order: mappedOrder });
         }
+        if (!error && !orderData) {
+          return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+        }
       } catch (e) {
         console.warn('Supabase fetch order error:', e);
       }
     }
 
-    const cached = localOrdersCache[id] || INITIAL_ORDERS.find((o) => o.id === id);
+    const cached = localOrdersCache[id];
     if (cached) {
       return NextResponse.json({ order: cached });
     }
@@ -271,18 +274,24 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   }
 
-  // Case 2: Fetch orders for a specific user ID
-  if (userId) {
+  // Case 2: Fetch orders for a specific user ID or email
+  if (userId || email) {
     if (isSupabaseConfigured()) {
       try {
         const supabase = createAdminClient();
-        const { data: userOrders, error } = await supabase
-          .from('orders')
-          .select('*, order_items(*)')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
+        let query = supabase.from('orders').select('*, order_items(*)');
 
-        if (!error && userOrders && userOrders.length > 0) {
+        if (userId && email) {
+          query = query.or(`user_id.eq.${userId},email.ilike.${email}`);
+        } else if (userId) {
+          query = query.eq('user_id', userId);
+        } else if (email) {
+          query = query.ilike('email', email);
+        }
+
+        const { data: userOrders, error } = await query.order('created_at', { ascending: false });
+
+        if (!error && userOrders) {
           const mappedOrders = userOrders.map(mapDbOrderToRecord);
           mappedOrders.forEach((ord) => {
             localOrdersCache[ord.id] = ord;
@@ -294,9 +303,11 @@ export async function GET(request: Request) {
       }
     }
 
-    // Gracefully fall back to local cache
+    // Gracefully fall back to local cache if Supabase query failed or not configured
     const userOrdersList = Object.values(localOrdersCache).filter(
-      (ord: any) => ord.userId === userId || ord.user_id === userId
+      (ord: any) =>
+        (userId && (ord.userId === userId || ord.user_id === userId)) ||
+        (email && ord.email && ord.email.toLowerCase() === email.toLowerCase())
     );
 
     return NextResponse.json({ orders: userOrdersList });
@@ -312,7 +323,7 @@ export async function GET(request: Request) {
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (!error && allOrders && allOrders.length > 0) {
+      if (!error && allOrders) {
         const mappedOrders = allOrders.map(mapDbOrderToRecord);
         mappedOrders.forEach((ord) => {
           localOrdersCache[ord.id] = ord;
@@ -345,8 +356,6 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    let dbUpdated: OrderRecord | null = null;
-
     // Update in Supabase if configured
     if (isSupabaseConfigured()) {
       try {
@@ -367,46 +376,27 @@ export async function PATCH(request: Request) {
           .maybeSingle();
 
         if (!error && updatedData) {
-          dbUpdated = mapDbOrderToRecord(updatedData);
+          const dbUpdated = mapDbOrderToRecord(updatedData);
           localOrdersCache[id] = dbUpdated;
+          return NextResponse.json({ success: true, order: dbUpdated });
         } else if (error) {
           console.warn('Supabase update order warning:', error.message);
+          return NextResponse.json({ error: error.message }, { status: 400 });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Supabase update order error:', err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
       }
     }
 
-    // Update in local cache
-    let order = localOrdersCache[id];
-    if (!order) {
-      const found = INITIAL_ORDERS.find((o) => o.id === id);
-      if (found) {
-        order = { ...found };
-        localOrdersCache[id] = order;
-      }
-    }
-
-    if (dbUpdated) {
-      return NextResponse.json({ success: true, order: dbUpdated });
-    }
-
+    // Update in local cache if Supabase not configured
+    const order = localOrdersCache[id];
     if (order) {
-      if (orderStatus) {
-        order.orderStatus = orderStatus;
-      }
-      if (paymentStatus) {
-        order.paymentStatus = paymentStatus;
-      }
-      if (paymentMethod) {
-        order.paymentMethod = paymentMethod;
-      }
-      if (payLabel) {
-        order.payLabel = payLabel;
-      }
-      if (note !== undefined) {
-        order.note = note;
-      }
+      if (orderStatus) order.orderStatus = orderStatus;
+      if (paymentStatus) order.paymentStatus = paymentStatus;
+      if (paymentMethod) order.paymentMethod = paymentMethod;
+      if (payLabel) order.payLabel = payLabel;
+      if (note !== undefined) order.note = note;
       localOrdersCache[id] = order;
       return NextResponse.json({ success: true, order });
     }

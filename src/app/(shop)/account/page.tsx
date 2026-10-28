@@ -18,11 +18,19 @@ import {
   ArrowRight,
   RotateCcw,
   RefreshCw,
+  Edit3,
+  Save,
+  X,
+  Home,
+  Crown,
+  KeyRound,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { OrderRecord } from '@/types';
 import { money, waLink } from '@/lib/utils';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { STATES } from '@/lib/products';
 
 function getOrderStatusBadge(status?: string) {
   switch (status?.toLowerCase()) {
@@ -90,9 +98,26 @@ function getPaymentStatusBadge(status?: string, method?: string) {
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, profile, signOut, isLoading } = useAuth();
+  const { user, profile, stats, signOut, isLoading, updateProfile, updatePassword } = useAuth();
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+
+  // Edit Profile State
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    phone: '',
+    address: '',
+    state: 'Abuja (FCT)',
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileFeedback, setProfileFeedback] = useState<{ message: string; isError: boolean } | null>(null);
+
+  // Change Password State
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' });
+  const [passwordFeedback, setPasswordFeedback] = useState<{ message: string; isError: boolean } | null>(null);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -104,7 +129,10 @@ export default function AccountPage() {
     if (!user) return;
     setLoadingOrders(true);
     try {
-      const res = await fetch(`/api/orders?userId=${encodeURIComponent(user.id)}`);
+      const url = `/api/orders?userId=${encodeURIComponent(user.id)}${
+        user.email ? `&email=${encodeURIComponent(user.email)}` : ''
+      }`;
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
@@ -119,6 +147,76 @@ export default function AccountPage() {
   useEffect(() => {
     fetchUserOrders();
   }, [fetchUserOrders]);
+
+  const handleOpenEdit = () => {
+    setEditForm({
+      full_name: profile?.full_name || '',
+      phone: profile?.phone || '',
+      address: profile?.address || '',
+      state: profile?.state || 'Abuja (FCT)',
+    });
+    setProfileFeedback(null);
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    setProfileFeedback(null);
+    try {
+      const res = await updateProfile({
+        full_name: editForm.full_name.trim(),
+        phone: editForm.phone.trim(),
+        address: editForm.address.trim(),
+        state: editForm.state,
+      });
+      if (res.error) {
+        setProfileFeedback({ message: res.error, isError: true });
+      } else {
+        setProfileFeedback({ message: 'Profile updated in Supabase successfully!', isError: false });
+        setTimeout(() => {
+          setIsEditingProfile(false);
+          setProfileFeedback(null);
+        }, 1200);
+      }
+    } catch (err: any) {
+      setProfileFeedback({ message: err.message || 'Failed to update profile', isError: true });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.password.length < 6) {
+      setPasswordFeedback({ message: 'Password must be at least 6 characters long.', isError: true });
+      return;
+    }
+    if (passwordForm.password !== passwordForm.confirm) {
+      setPasswordFeedback({ message: 'Passwords do not match.', isError: true });
+      return;
+    }
+
+    setIsSavingPassword(true);
+    setPasswordFeedback(null);
+    try {
+      const res = await updatePassword(passwordForm.password);
+      if (!res.success) {
+        setPasswordFeedback({ message: res.error || 'Failed to update password', isError: true });
+      } else {
+        setPasswordFeedback({ message: 'Password updated securely in Supabase!', isError: false });
+        setTimeout(() => {
+          setIsChangingPassword(false);
+          setPasswordFeedback(null);
+          setPasswordForm({ password: '', confirm: '' });
+        }, 1200);
+      }
+    } catch (err: any) {
+      setPasswordFeedback({ message: err.message || 'Failed to update password', isError: true });
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -166,16 +264,27 @@ export default function AccountPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* Profile Card */}
         <div className="lg:col-span-4 p-6 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-lg shadow">
-              {profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-lg shadow">
+                {profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+              </div>
+              <div>
+                <strong className="block font-display text-lg font-bold">
+                  {profile?.full_name || 'Customer'}
+                </strong>
+                <small className="text-xs text-[var(--mute)]">MiCollections Member</small>
+              </div>
             </div>
-            <div>
-              <strong className="block font-display text-lg font-bold">
-                {profile?.full_name || 'Customer'}
-              </strong>
-              <small className="text-xs text-[var(--mute)]">MiCollections Member</small>
-            </div>
+
+            <button
+              onClick={handleOpenEdit}
+              className="btn-ghost text-xs py-1.5 px-3 inline-flex items-center gap-1.5 text-brand border border-brand/20 hover:bg-brand/10"
+              title="Edit Profile"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit</span>
+            </button>
           </div>
 
           <div className="space-y-3 text-xs sm:text-sm text-[var(--ink2)] border-t border-[var(--line)] pt-4">
@@ -189,6 +298,12 @@ export default function AccountPage() {
                 <span>{profile.phone}</span>
               </div>
             )}
+            {profile?.address && (
+              <div className="flex items-start gap-2.5">
+                <Home className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" />
+                <span>{profile.address}</span>
+              </div>
+            )}
             {profile?.state && (
               <div className="flex items-center gap-2.5">
                 <MapPin className="w-4 h-4 text-brand flex-shrink-0" />
@@ -197,7 +312,36 @@ export default function AccountPage() {
             )}
           </div>
 
-          <div className="pt-2">
+          {/* VIP Member Badge & Spend Stats */}
+          {stats && (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-brand/10 via-purple-500/5 to-transparent border border-brand/20 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-brand flex items-center gap-1.5">
+                  <Crown className="w-3.5 h-3.5" /> {stats.tier}
+                </span>
+                <span className="text-[11px] text-[var(--mute)]">
+                  {stats.totalOrders} {stats.totalOrders === 1 ? 'order' : 'orders'}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="text-[var(--mute)]">Lifetime Value:</span>
+                <span className="font-mono font-bold text-[var(--ink)]">{money(stats.lifetimeValue)}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2 pt-2 border-t border-[var(--line)]">
+            <button
+              onClick={() => {
+                setPasswordForm({ password: '', confirm: '' });
+                setPasswordFeedback(null);
+                setIsChangingPassword(true);
+              }}
+              className="btn-ghost text-xs py-2.5 px-3 w-full justify-center inline-flex items-center gap-2 text-[var(--ink2)] border border-[var(--line)] hover:border-brand/30"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-brand" /> Change Password
+            </button>
+
             <Link
               href="/shop"
               className="btn-primary text-xs py-3 w-full justify-center"
@@ -370,6 +514,195 @@ export default function AccountPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditingProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md p-6 sm:p-8 rounded-[32px] bg-[var(--surface)] border border-[var(--line)] shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
+              <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-brand" /> Edit Profile
+              </h3>
+              <button
+                onClick={() => setIsEditingProfile(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--mute)] hover:text-[var(--ink)] hover:bg-[var(--surface2)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {profileFeedback && (
+              <div
+                className={`p-3 rounded-xl text-xs font-medium text-center ${
+                  profileFeedback.isError
+                    ? 'bg-red-500/10 text-red-600 border border-red-500/20'
+                    : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                }`}
+              >
+                {profileFeedback.message}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                  placeholder="e.g. Maryam Bello"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">WhatsApp Phone Number</label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  placeholder="e.g. 0814 573 6483"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">Delivery Address</label>
+                <input
+                  type="text"
+                  value={editForm.address}
+                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                  placeholder="e.g. Plot 104, Diplomatic Zone, Maitama"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">State</label>
+                <select
+                  value={editForm.state}
+                  onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand cursor-pointer"
+                >
+                  {STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingProfile(false)}
+                  className="btn-ghost text-xs py-2.5 flex-1 justify-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="btn-primary text-xs py-2.5 flex-1 justify-center disabled:opacity-50"
+                >
+                  {isSavingProfile ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" /> Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {isChangingPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md p-6 sm:p-8 rounded-[32px] bg-[var(--surface)] border border-[var(--line)] shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
+              <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                <Shield className="w-5 h-5 text-brand" /> Account Security
+              </h3>
+              <button
+                onClick={() => setIsChangingPassword(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--mute)] hover:text-[var(--ink)] hover:bg-[var(--surface2)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {passwordFeedback && (
+              <div
+                className={`p-3 rounded-xl text-xs font-medium text-center ${
+                  passwordFeedback.isError
+                    ? 'bg-red-500/10 text-red-600 border border-red-500/20'
+                    : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                }`}
+              >
+                {passwordFeedback.message}
+              </div>
+            )}
+
+            <form onSubmit={handleSavePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
+                  placeholder="At least 6 characters"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.confirm}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                  placeholder="Re-enter new password"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsChangingPassword(false)}
+                  className="btn-ghost text-xs py-2.5 flex-1 justify-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingPassword}
+                  className="btn-primary text-xs py-2.5 flex-1 justify-center disabled:opacity-50"
+                >
+                  {isSavingPassword ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" /> Save Password
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

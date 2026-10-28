@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:supabase": "npx tsx --env-file=.env.local scripts/test-supabase-clients.ts"
+    "test:supabase": "npx tsx --env-file=.env.local scripts/test-supabase-clients.ts",
+    "test:auth": "node --env-file=.env.local scripts/verify_auth_pipeline.mjs",
+    "test:profile": "node --env-file=.env.local scripts/test_user_profile_pipeline.mjs",
+    "test:reset": "node --env-file=.env.local scripts/test_password_reset_pipeline.mjs",
+    "test:pipelines": "node --env-file=.env.local scripts/test_pipelines_e2e.mjs",
+    "test:admin": "node scripts/test_admin_suite.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

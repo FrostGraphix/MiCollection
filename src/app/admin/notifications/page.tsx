@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StoreNotification } from '@/types';
-import { INITIAL_NOTIFICATIONS, INITIAL_ORDERS } from '@/lib/mockOrders';
+import { INITIAL_NOTIFICATIONS } from '@/lib/mockOrders';
 import { playOrderChime } from '@/components/admin/AudioAlert';
 import { money } from '@/lib/utils';
 import {
@@ -55,9 +55,46 @@ export default function AdminNotificationsPage() {
     loadEmail();
   }, [emailTemplate]);
 
+  // Fetch live notifications from API
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/admin/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notifications && Array.isArray(data.notifications)) {
+          setNotifications(data.notifications);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load notifications:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+
+    const handleNewOrder = () => {
+      fetchNotifications();
+    };
+
+    window.addEventListener('mc:new-order', handleNewOrder);
+    return () => {
+      window.removeEventListener('mc:new-order', handleNewOrder);
+    };
+  }, []);
+
   // Handle Mark All Read
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await fetch('/api/admin/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true }),
+      });
+    } catch (err) {
+      console.warn('Failed to mark read on server:', err);
+    }
   };
 
   // Simulate New Live Order Event

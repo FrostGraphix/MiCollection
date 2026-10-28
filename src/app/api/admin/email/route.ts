@@ -4,8 +4,117 @@ import {
   generateDispatchEmail,
   generateOrderConfirmationEmail,
 } from '@/lib/emailTemplates';
-import { INITIAL_ORDERS } from '@/lib/mockOrders';
 import { OrderRecord } from '@/types';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
+import { generateOrderText } from '@/lib/utils';
+import { byId } from '@/lib/products';
+
+const DEFAULT_SAMPLE_ORDER: OrderRecord = {
+  id: 'MC-SAMPLE',
+  name: 'Amina Bello-Kano',
+  phone: '08145736483',
+  email: 'amina.bello@example.com',
+  address: 'Plot 412, Mississippi Street, Maitama',
+  state: 'Abuja (FCT)',
+  landmark: 'Near Farmers Market',
+  deliveryLabel: 'Same-Day Abuja Courier',
+  eta: 'Today by 4:00 PM',
+  payLabel: 'Bank Transfer',
+  paymentMethod: 'transfer',
+  paymentStatus: 'paid',
+  orderStatus: 'confirmed',
+  fee: 3500,
+  subtotal: 145000,
+  discount: 0,
+  total: 148500,
+  items: [
+    {
+      name: 'Royal Silk Abaya with Pearl Beadwork',
+      price: 85000,
+      qty: 1,
+      art: 'tote',
+      color: 'black',
+      opt: 'L',
+    },
+    {
+      name: 'Chunky Sole Streetwear Sneaker',
+      price: 60000,
+      qty: 1,
+      art: 'sneaker',
+      color: 'ivory',
+      opt: 'Size 40',
+    },
+  ],
+  lines: [
+    '- 1 x Royal Silk Abaya with Pearl Beadwork (L)',
+    '- 1 x Chunky Sole Streetwear Sneaker (Size 40)',
+  ],
+  wa: '',
+  createdAt: new Date().toISOString(),
+};
+
+async function getOrderForEmail(orderId?: string | null): Promise<OrderRecord> {
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = createAdminClient();
+      let query = supabase.from('orders').select('*, order_items(*)');
+      if (orderId) {
+        query = query.eq('id', orderId);
+      } else {
+        query = query.order('created_at', { ascending: false }).limit(1);
+      }
+      const { data, error } = await query.maybeSingle();
+      if (!error && data) {
+        const items = (data.order_items || []).map((it: any) => {
+          const prod = it.product_id ? byId(Number(it.product_id)) : null;
+          return {
+            name: it.name || prod?.name || 'Item',
+            price: Number(it.price || prod?.price || 0),
+            qty: Number(it.qty || 1),
+            art: it.art || prod?.art || 'tote',
+            color: it.color || prod?.colors?.[0] || 'violet',
+            opt: it.opt || '',
+            productId: it.product_id ? Number(it.product_id) : undefined,
+            image: it.image || prod?.images?.[0] || undefined,
+          };
+        });
+
+        const rec: OrderRecord = {
+          id: data.id,
+          userId: data.user_id || undefined,
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          state: data.state,
+          landmark: data.landmark || undefined,
+          deliveryLabel: data.delivery_label || 'Standard Delivery',
+          eta: data.eta || '1 to 2 working days',
+          payLabel: data.pay_label || 'Bank Transfer',
+          paymentMethod: data.payment_method || 'transfer',
+          paymentStatus: data.payment_status || 'pending',
+          orderStatus: data.order_status || 'received',
+          fee: Number(data.fee || 0),
+          subtotal: Number(data.subtotal || 0),
+          discount: Number(data.discount || 0),
+          total: Number(data.total || 0),
+          items,
+          lines: items.map((it: any) => `- ${it.qty} x ${it.name} (${it.opt})`),
+          wa: '',
+          createdAt: data.created_at,
+          note: data.note || undefined,
+        };
+        rec.wa = generateOrderText(rec);
+        return rec;
+      }
+    } catch (e) {
+      console.warn('Error fetching live order for email:', e);
+    }
+  }
+
+  return DEFAULT_SAMPLE_ORDER;
+}
 
 export async function GET(request: Request) {
   try {
@@ -14,14 +123,7 @@ export async function GET(request: Request) {
     const orderId = searchParams.get('orderId');
     const preview = searchParams.get('preview') === 'true';
 
-    // Find requested order or default to first sample order
-    let order: OrderRecord | undefined;
-    if (orderId) {
-      order = INITIAL_ORDERS.find((o) => o.id === orderId);
-    }
-    if (!order) {
-      order = INITIAL_ORDERS[0];
-    }
+    const order = await getOrderForEmail(orderId);
 
     let html = '';
     let subject = '';
@@ -47,7 +149,6 @@ export async function GET(request: Request) {
         break;
     }
 
-    // If client requested direct HTML preview, return text/html
     if (preview) {
       return new NextResponse(html, {
         headers: {
@@ -78,12 +179,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { type = 'order_confirmation', orderId, order: customOrder, trackingInfo, recipientEmail } = body;
 
-    let order: OrderRecord | undefined = customOrder;
-    if (!order && orderId) {
-      order = INITIAL_ORDERS.find((o) => o.id === orderId);
-    }
+    let order: OrderRecord = customOrder;
     if (!order) {
-      order = INITIAL_ORDERS[0];
+      order = await getOrderForEmail(orderId);
     }
 
     let html = '';
@@ -107,7 +205,6 @@ export async function POST(request: Request) {
         break;
     }
 
-    // Simulating transactional delivery pipeline (Resend / SendGrid / NodeMailer)
     const messageId = `msg_mc_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
     console.log(`[Email Pipeline] Dispatched '${type}' to <${recipient}> with ID ${messageId}`);
 

@@ -62,5 +62,8 @@ export function createClient(customCookieStore?: any) {
 
   return createServerClient(supabaseUrl!, supabaseAnonKey!, {
     cookies: cookieHandlers,
+    global: {
+      fetch: (url: any, init?: any) => fetch(url, { ...init, cache: 'no-store' }),
+    },
   });
 }

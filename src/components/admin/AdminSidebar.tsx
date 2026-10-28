@@ -84,16 +84,39 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
+  const [pendingOrders, setPendingOrders] = useState<number>(17);
+  const [lowStock, setLowStock] = useState<number>(4);
 
   useEffect(() => {
     setCurrentUser(getAdminSession());
+
+    async function loadBadges() {
+      try {
+        const res = await fetch('/api/admin/analytics');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.kpis?.pendingDispatches !== undefined) {
+            setPendingOrders(data.kpis.pendingDispatches);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load sidebar badges:', err);
+      }
+    }
+    loadBadges();
+
     const handleAuthChange = (e: Event) => {
       const custom = e as CustomEvent<{ user: AdminUser | null }>;
       setCurrentUser(custom.detail?.user || null);
     };
+
+    const handleNewOrder = () => loadBadges();
+
     window.addEventListener('mc:admin-auth', handleAuthChange as EventListener);
+    window.addEventListener('mc:new-order', handleNewOrder as EventListener);
     return () => {
       window.removeEventListener('mc:admin-auth', handleAuthChange as EventListener);
+      window.removeEventListener('mc:new-order', handleNewOrder as EventListener);
     };
   }, []);
 
@@ -218,7 +241,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           : 'bg-brand/15 text-brand border border-brand/30'
                       }`}
                     >
-                      {item.badge.text}
+                      {item.href === '/admin/orders'
+                        ? `${pendingOrders} new`
+                        : item.href === '/admin/products'
+                        ? `${lowStock} low`
+                        : item.badge.text}
                     </span>
                   )}
 

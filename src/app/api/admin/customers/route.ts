@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { CustomerProfile, CustomerVIPTier } from '@/types';
-import { INITIAL_CUSTOMERS } from '@/lib/mockOrders';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { calculateVIPTier } from '@/lib/utils';
@@ -20,7 +19,7 @@ export async function GET(request: Request) {
     // 1. Try Supabase profiles and orders tables if configured
     if (isSupabaseConfigured()) {
       try {
-        const supabase = createAdminClient();
+        const supabase = createAdminClient(true);
 
         // Query profiles and orders in parallel
         const [profilesRes, ordersRes] = await Promise.all([
@@ -30,6 +29,7 @@ export async function GET(request: Request) {
 
         const profiles = profilesRes.data || [];
         const orders = ordersRes.data || [];
+        console.log('CRM API: isSupabaseConfigured:', isSupabaseConfigured(), 'profiles count:', profiles.length, 'orders count:', orders.length, 'profiles err:', profilesRes.error, 'orders err:', ordersRes.error);
 
         if (profiles.length > 0 || orders.length > 0) {
           // Map to group orders by customer identifier
@@ -149,13 +149,8 @@ export async function GET(request: Request) {
           customerList.sort((a, b) => b.lifetimeValue - a.lifetimeValue);
         }
       } catch (err) {
-        console.warn('Supabase customers query error, falling back to INITIAL_CUSTOMERS:', err);
+        console.warn('Supabase customers query error:', err);
       }
-    }
-
-    // 2. Fall back to INITIAL_CUSTOMERS if Supabase tables are empty or unconfigured
-    if (customerList.length === 0) {
-      customerList = [...INITIAL_CUSTOMERS];
     }
 
     // Single item query

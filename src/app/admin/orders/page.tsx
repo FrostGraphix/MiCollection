@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { OrderRecord, OrderStatus } from '@/types';
-import { INITIAL_ORDERS } from '@/lib/mockOrders';
 import { STATES } from '@/lib/products';
 import { money } from '@/lib/utils';
 import { OrderModal } from '@/components/admin/OrderModal';
@@ -29,7 +28,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<OrderRecord[]>(INITIAL_ORDERS);
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -38,22 +37,21 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState('all');
   const [selectedPayment, setSelectedPayment] = useState('all');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch live orders if available
+  // Fetch live orders
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
       const res = await fetch('/api/orders');
       if (res.ok) {
         const data = await res.json();
-        if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
-          // Merge or replace with API orders
+        if (data.orders && Array.isArray(data.orders)) {
           setOrders(data.orders);
         }
       }
     } catch (err) {
-      console.warn('Failed to fetch orders from API, keeping current state:', err);
+      console.warn('Failed to fetch orders from API:', err);
     } finally {
       setIsLoading(false);
     }
@@ -439,7 +437,14 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--line)]">
-              {filteredOrders.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-[var(--mute)]">
+                    <RefreshCw className="w-6 h-6 text-brand mx-auto mb-2 animate-spin opacity-80" />
+                    <p className="font-semibold text-sm text-[var(--ink)]">Loading live orders from Supabase...</p>
+                  </td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-[var(--mute)]">
                     <AlertCircle className="w-8 h-8 text-brand mx-auto mb-2 opacity-60" />

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { CustomerProfile, CustomerVIPTier } from '@/types';
-import { INITIAL_CUSTOMERS } from '@/lib/mockOrders';
 import { money } from '@/lib/utils';
 import {
   Users,
@@ -28,8 +27,8 @@ import {
 } from 'lucide-react';
 
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState<CustomerProfile[]>(INITIAL_CUSTOMERS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [customers, setCustomers] = useState<CustomerProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState<'all' | CustomerVIPTier>('all');
   const [selectedState, setSelectedState] = useState('all');
@@ -42,12 +41,12 @@ export default function AdminCustomersPage() {
       const res = await fetch('/api/admin/customers');
       if (res.ok) {
         const data = await res.json();
-        if (data.customers && Array.isArray(data.customers) && data.customers.length > 0) {
+        if (data.customers && Array.isArray(data.customers)) {
           setCustomers(data.customers);
         }
       }
     } catch (err) {
-      console.warn('Failed to fetch customers from API, keeping local state:', err);
+      console.warn('Failed to fetch customers from API:', err);
     } finally {
       setIsLoading(false);
     }
@@ -282,7 +281,14 @@ export default function AdminCustomersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--line)]">
-              {filteredCustomers.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-[var(--mute)]">
+                    <RefreshCw className="w-6 h-6 text-brand mx-auto mb-2 animate-spin opacity-80" />
+                    <p className="font-semibold text-sm text-[var(--ink)]">Loading live CRM data...</p>
+                  </td>
+                </tr>
+              ) : filteredCustomers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-[var(--mute)]">
                     <Users className="w-8 h-8 text-brand mx-auto mb-2 opacity-60" />

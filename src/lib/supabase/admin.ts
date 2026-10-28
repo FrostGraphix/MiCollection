@@ -62,6 +62,9 @@ export function createAdminClient(forceNew = false): SupabaseClient {
           autoRefreshToken: false,
           persistSession: false,
         },
+        global: {
+          fetch: (url: any, init?: any) => fetch(url, { ...init, cache: 'no-store' }),
+        },
       });
 
       if (!forceNew) {
@@ -95,6 +98,9 @@ export function createAdminClient(forceNew = false): SupabaseClient {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
+    },
+    global: {
+      fetch: (url: any, init?: any) => fetch(url, { ...init, cache: 'no-store' }),
     },
   });
 

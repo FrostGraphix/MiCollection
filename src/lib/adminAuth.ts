@@ -1,7 +1,9 @@
 /**
  * Admin Authentication & Session Management Core for MiCollections
- * Domain 1: Admin Shell & Security Core
+ * Connected directly to Live Supabase Authentication
  */
+
+import { createClient } from '@/lib/supabase/client';
 
 export type AdminRole = 'super_admin' | 'store_manager' | 'dispatcher';
 
@@ -16,7 +18,7 @@ export interface AdminUser {
   lastLogin?: string;
 }
 
-export interface DemoAdminCredential {
+export interface AdminPreset {
   email: string;
   password: string;
   role: AdminRole;
@@ -26,10 +28,11 @@ export interface DemoAdminCredential {
   department: string;
 }
 
-export const DEMO_ADMINS: Record<AdminRole, DemoAdminCredential> = {
+// Live Supabase Authenticated Staff Accounts
+export const ADMIN_PRESETS: Record<AdminRole, AdminPreset> = {
   super_admin: {
     email: 'admin@micollections.com',
-    password: 'admin123',
+    password: 'admin123@MiCollection',
     role: 'super_admin',
     name: 'Mariam Siyaka',
     roleTitle: 'Super Admin',
@@ -38,7 +41,7 @@ export const DEMO_ADMINS: Record<AdminRole, DemoAdminCredential> = {
   },
   store_manager: {
     email: 'manager@micollections.com',
-    password: 'manager123',
+    password: 'manager123@MiCollection',
     role: 'store_manager',
     name: 'Aminu Bello',
     roleTitle: 'Store Manager',
@@ -47,7 +50,7 @@ export const DEMO_ADMINS: Record<AdminRole, DemoAdminCredential> = {
   },
   dispatcher: {
     email: 'dispatch@micollections.com',
-    password: 'dispatch123',
+    password: 'dispatch123@MiCollection',
     role: 'dispatcher',
     name: 'Chidi Okafor',
     roleTitle: 'Dispatcher',
@@ -56,11 +59,14 @@ export const DEMO_ADMINS: Record<AdminRole, DemoAdminCredential> = {
   },
 };
 
+// Backward-compatible alias
+export const DEMO_ADMINS = ADMIN_PRESETS;
+
 const SESSION_STORAGE_KEY = 'mc_admin_session';
 const SESSION_COOKIE_KEY = 'mc_admin_session';
 const STORE_OPEN_KEY = 'mc_store_open';
 
-// Cookie helpers for client-side storage with fallback to localStorage
+// Cookie helpers for client-side storage
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
@@ -79,25 +85,70 @@ function deleteCookie(name: string): void {
 }
 
 /**
- * Validates hardcoded demo credentials
+ * Authenticates admin directly with Live Supabase Auth service
  */
-export function validateAdminCredentials(email: string, password: string): AdminUser | null {
-  const normalizedEmail = email.trim().toLowerCase();
-  for (const cred of Object.values(DEMO_ADMINS)) {
-    if (cred.email.toLowerCase() === normalizedEmail && cred.password === password) {
+export async function signInAdminWithSupabase(
+  email: string,
+  password: string
+): Promise<{ user: AdminUser | null; error: string | null }> {
+  try {
+    const supabase = createClient();
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Authenticate with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
+
+    if (error || !data.user) {
       return {
-        id: `adm_${cred.role}`,
-        email: cred.email,
-        name: cred.name,
-        role: cred.role,
-        roleTitle: cred.roleTitle,
-        avatar: cred.avatar,
-        department: cred.department,
-        lastLogin: new Date().toISOString(),
+        user: null,
+        error: error?.message || 'Invalid administrative credentials.',
       };
     }
+
+    const sbUser = data.user;
+
+    // 2. Determine admin role from app_metadata or user_metadata
+    let role: AdminRole = 'super_admin';
+    const metadataRole = (sbUser.app_metadata?.role || sbUser.user_metadata?.role) as AdminRole;
+
+    if (metadataRole && ['super_admin', 'store_manager', 'dispatcher'].includes(metadataRole)) {
+      role = metadataRole;
+    } else if (cleanEmail.includes('manager')) {
+      role = 'store_manager';
+    } else if (cleanEmail.includes('dispatch')) {
+      role = 'dispatcher';
+    }
+
+    const preset = ADMIN_PRESETS[role];
+
+    const adminUser: AdminUser = {
+      id: sbUser.id,
+      email: sbUser.email || cleanEmail,
+      name: sbUser.user_metadata?.full_name || preset?.name || 'Administrator',
+      role,
+      roleTitle: sbUser.user_metadata?.roleTitle || preset?.roleTitle || formatAdminRole(role),
+      avatar: sbUser.user_metadata?.avatar || preset?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      department: sbUser.user_metadata?.department || preset?.department || 'Executive Operations',
+      lastLogin: new Date().toISOString(),
+    };
+
+    // 3. Save admin session in cookie & localStorage
+    setAdminSession(adminUser);
+
+    return {
+      user: adminUser,
+      error: null,
+    };
+  } catch (err: any) {
+    console.error('Supabase admin login exception:', err);
+    return {
+      user: null,
+      error: err.message || 'Authentication service error.',
+    };
   }
-  return null;
 }
 
 /**
@@ -140,7 +191,6 @@ export function getAdminSession(): AdminUser | null {
     if (localData) {
       const user = JSON.parse(localData) as AdminUser;
       if (user && user.role) {
-        // Re-sync cookie
         setCookie(SESSION_COOKIE_KEY, localData);
         return user;
       }
@@ -153,7 +203,7 @@ export function getAdminSession(): AdminUser | null {
 }
 
 /**
- * Clears admin session from cookie and localStorage
+ * Clears admin session from cookie and localStorage, and signs out of Supabase
  */
 export function clearAdminSession(): void {
   if (typeof window === 'undefined') return;
@@ -163,6 +213,11 @@ export function clearAdminSession(): void {
   } catch (err) {
     console.warn('localStorage error clearing admin session:', err);
   }
+
+  try {
+    const supabase = createClient();
+    supabase.auth.signOut().catch(() => {});
+  } catch {}
 
   window.dispatchEvent(new CustomEvent('mc:admin-auth', { detail: { user: null } }));
 }

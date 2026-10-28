@@ -150,6 +150,15 @@ export interface UserProfile {
   phone?: string;
   address?: string;
   state?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserProfileStats {
+  totalOrders: number;
+  lifetimeValue: number;
+  tier: CustomerVIPTier;
+  lastOrderDate?: string;
 }
 
 export interface DiscountCoupon {

@@ -201,6 +201,47 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [newOrderAlert, setNewOrderAlert] = useState<string | null>(null);
 
+  // Load live orders from /api/orders on mount
+  useEffect(() => {
+    async function loadLiveOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.orders) && data.orders.length > 0) {
+            const mapped: AdminOrder[] = data.orders.map((o: any) => ({
+              id: o.id,
+              name: o.name,
+              phone: o.phone,
+              email: o.email,
+              address: o.address,
+              state: o.state,
+              landmark: o.landmark,
+              amount: Number(o.total || 0),
+              paymentMethod: (o.paymentMethod as any) || 'transfer',
+              paymentStatus: (o.paymentStatus as any) || 'pending',
+              orderStatus: (o.orderStatus as any) || 'received',
+              deliveryLabel: o.deliveryLabel || 'Abuja Doorstep Delivery',
+              eta: o.eta || '1 to 2 working days',
+              items: (o.items || []).map((it: any) => ({
+                name: it.name,
+                price: Number(it.price || 0),
+                qty: Number(it.qty || 1),
+                color: it.color,
+                opt: it.opt,
+              })),
+              createdAt: o.createdAt || new Date().toISOString(),
+            }));
+            setOrders(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load live orders for ticker:', err);
+      }
+    }
+    loadLiveOrders();
+  }, []);
+
   // Listen for real-time order alerts dispatched in the browser
   useEffect(() => {
     const handleNewOrder = (event: Event) => {

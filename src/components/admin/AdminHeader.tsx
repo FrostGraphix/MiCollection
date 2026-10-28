@@ -113,8 +113,41 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       }
     };
 
+    const loadNotifs = async () => {
+      try {
+        const res = await fetch('/api/admin/notifications');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.notifications && Array.isArray(data.notifications)) {
+            setNotifications(
+              data.notifications.slice(0, 6).map((n: any) => ({
+                id: n.id,
+                title: n.title,
+                desc: n.message,
+                time: n.timestamp,
+                type: n.type?.includes('order')
+                  ? 'order'
+                  : n.type?.includes('stock')
+                  ? 'stock'
+                  : 'dispatch',
+                unread: !n.read,
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load header notifications:', err);
+      }
+    };
+    loadNotifs();
+
+    const handleNewOrder = () => {
+      loadNotifs();
+    };
+
     window.addEventListener('mc:admin-auth', handleAuthChange as EventListener);
     window.addEventListener('mc:store-status', handleStoreChange as EventListener);
+    window.addEventListener('mc:new-order', handleNewOrder as EventListener);
 
     // Click outside handler for dropdowns
     const handleClickOutside = (e: MouseEvent) => {
@@ -131,6 +164,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     return () => {
       window.removeEventListener('mc:admin-auth', handleAuthChange as EventListener);
       window.removeEventListener('mc:store-status', handleStoreChange as EventListener);
+      window.removeEventListener('mc:new-order', handleNewOrder as EventListener);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);

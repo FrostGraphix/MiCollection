@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getAdminSession, AdminUser, setAdminSession, DEMO_ADMINS } from '@/lib/adminAuth';
+import { getAdminSession, AdminUser, setAdminSession } from '@/lib/adminAuth';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AudioAlert } from '@/components/admin/AudioAlert';
@@ -31,21 +31,13 @@ export default function AdminLayout({
     }
 
     // Check active session
-    let currentSession = getAdminSession();
+    const currentSession = getAdminSession();
 
-    // In local sandbox / demo, if no session is set, auto-initialize with Super Admin
+    // Discard mock bypass: unauthenticated users are directed to /admin/login
     if (!currentSession) {
-      currentSession = {
-        id: 'adm_super_admin',
-        email: DEMO_ADMINS.super_admin.email,
-        name: DEMO_ADMINS.super_admin.name,
-        role: 'super_admin',
-        roleTitle: DEMO_ADMINS.super_admin.roleTitle,
-        avatar: DEMO_ADMINS.super_admin.avatar,
-        department: DEMO_ADMINS.super_admin.department,
-        lastLogin: new Date().toISOString(),
-      };
-      setAdminSession(currentSession);
+      setIsVerifying(false);
+      router.replace('/admin/login');
+      return;
     }
 
     setSession(currentSession);
