@@ -21,8 +21,10 @@ import {
   X,
   Clock,
 } from 'lucide-react';
+import { useModal } from '@/context/ModalContext';
 
 export default function AdminDiscountsPage() {
+  const { confirm } = useModal();
   const [coupons, setCoupons] = useState<DiscountCoupon[]>(INITIAL_COUPONS);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -53,8 +55,21 @@ export default function AdminDiscountsPage() {
   };
 
   // Delete coupon
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this discount promo code?')) {
+  const handleDelete = async (id: string, code: string) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Promo Code',
+      message: (
+        <span>
+          Are you sure you want to delete promo code <strong className="text-[var(--ink)]">&ldquo;{code}&rdquo;</strong>? Active customers will no longer be able to use it.
+        </span>
+      ),
+      confirmText: 'Yes, Delete',
+      cancelText: 'Cancel',
+      danger: true,
+      variant: 'error',
+    });
+
+    if (isConfirmed) {
       setCoupons((prev) => prev.filter((c) => c.id !== id));
     }
   };
@@ -351,7 +366,7 @@ export default function AdminDiscountsPage() {
                       {/* Actions */}
                       <td className="py-3.5 px-4 whitespace-nowrap text-right">
                         <button
-                          onClick={() => handleDelete(coupon.id)}
+                          onClick={() => handleDelete(coupon.id, coupon.code)}
                           title="Delete Coupon"
                           className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors"
                         >

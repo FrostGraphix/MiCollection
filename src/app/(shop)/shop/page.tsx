@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Search, RotateCcw, MessageSquare, SlidersHorizontal } from 'lucide-react';
 import { CATS, PRODUCTS, catOf } from '@/lib/products';
+import { Product, Category } from '@/types';
 import { money, waLink } from '@/lib/utils';
 import { ProductCard } from '@/components/shop/ProductCard';
 
@@ -13,11 +14,21 @@ function ShopContent() {
   const initialCat = searchParams.get('cat') || 'all';
   const initialQ = searchParams.get('q') || '';
 
+  // Initialized with static PRODUCTS & CATS for instant SSR & hydration
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+  const [categories, setCategories] = useState<Category[]>(CATS);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const [selectedCat, setSelectedCat] = useState<string>(initialCat);
   const [maxPrice, setMaxPrice] = useState<number>(40000);
   const [searchQuery, setSearchQuery] = useState<string>(initialQ);
   const [sortBy, setSortBy] = useState<'featured' | 'low' | 'high' | 'az'>('featured');
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+
+  // Dynamic maximum price boundary based on current catalog
+  const maxCatalogPrice = useMemo(() => {
+    return Math.max(40000, ...products.map((p) => p.price || 0));
+  }, [products]);
 
   // Sync state whenever URL query params change (e.g. from MegaMenu, Footer, or SearchModal)
   useEffect(() => {
@@ -33,8 +44,42 @@ function ShopContent() {
     }
   }, [searchParams]);
 
+  // Dynamically load active catalog from /api/products
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCatalog() {
+      try {
+        setIsLoading(true);
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            if (Array.isArray(data.products) && data.products.length > 0) {
+              setProducts(data.products);
+            }
+            if (Array.isArray(data.categories) && data.categories.length > 0) {
+              setCategories(data.categories);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load dynamic catalog from /api/products, using static fallback:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadCatalog();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const filteredProducts = useMemo(() => {
-    let result = PRODUCTS.filter((p) => {
+    let result = products.filter((p) => {
       const matchCat = selectedCat === 'all' || p.cat === selectedCat;
       const matchPrice = p.price <= maxPrice;
       const matchQuery =
@@ -52,16 +97,18 @@ function ShopContent() {
     }
 
     return result;
-  }, [selectedCat, maxPrice, searchQuery, sortBy]);
+  }, [products, selectedCat, maxPrice, searchQuery, sortBy]);
 
   const resetFilters = () => {
     setSelectedCat('all');
-    setMaxPrice(40000);
+    setMaxPrice(maxCatalogPrice);
     setSearchQuery('');
     setSortBy('featured');
   };
 
-  const currentCategory = catOf(selectedCat);
+  const currentCategory = useMemo(() => {
+    return categories.find((c) => c.id === selectedCat) || catOf(selectedCat);
+  }, [categories, selectedCat]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
@@ -100,9 +147,9 @@ function ShopContent() {
               : 'bg-[var(--surface)] border-[var(--line)] text-[var(--ink)]'
           }`}
         >
-          All ({PRODUCTS.length})
+          All ({products.length})
         </button>
-        {CATS.map((cat) => (
+        {categories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setSelectedCat(cat.id)}
@@ -112,7 +159,7 @@ function ShopContent() {
                 : 'bg-[var(--surface)] border-[var(--line)] text-[var(--ink)]'
             }`}
           >
-            {cat.name} ({PRODUCTS.filter((p) => p.cat === cat.id).length})
+            {cat.name} ({products.filter((p) => p.cat === cat.id).length})
           </button>
         ))}
       </div>
@@ -139,10 +186,10 @@ function ShopContent() {
                 }`}
               >
                 <span>All Products</span>
-                <span className="opacity-70 font-mono">{PRODUCTS.length}</span>
+                <span className="opacity-70 font-mono">{products.length}</span>
               </button>
-              {CATS.map((cat) => {
-                const count = PRODUCTS.filter((p) => p.cat === cat.id).length;
+              {categories.map((cat) => {
+                const count = products.filter((p) => p.cat === cat.id).length;
                 return (
                   <button
                     key={cat.id}
@@ -169,7 +216,7 @@ function ShopContent() {
             <input
               type="range"
               min="2000"
-              max="40000"
+              max={maxCatalogPrice}
               step="500"
               value={maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
@@ -255,7 +302,7 @@ function ShopContent() {
               <input
                 type="range"
                 min="2000"
-                max="40000"
+                max={maxCatalogPrice}
                 step="500"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}

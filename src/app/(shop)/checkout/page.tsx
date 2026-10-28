@@ -8,14 +8,17 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { byId, CFG, PAL, STATES } from '@/lib/products';
 import { DeliveryType, PaymentMethod } from '@/types';
-import { money } from '@/lib/utils';
+import { money, waLink, generateOrderText } from '@/lib/utils';
 import { ProductArt } from '@/components/shop/ProductArt';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { useModal } from '@/context/ModalContext';
+import { RefreshCw, Building2, MessageSquare } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, subtotal, discount, feeOf, clearCart } = useCart();
   const { user, profile } = useAuth();
+  const { openModal, closeModal, showError } = useModal();
 
   const [formData, setFormData] = useState({
     name: profile?.full_name || '',
@@ -67,6 +70,126 @@ export default function CheckoutPage() {
     return Object.keys(err).length === 0;
   };
 
+  const attemptPaystack = async (orderId: string, email: string, amount: number) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    try {
+      const paystackRes = await fetch('/api/checkout/paystack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          email,
+          amount,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      const paystackData = await paystackRes.json();
+      if (paystackData.status && paystackData.data?.authorization_url) {
+        clearCart();
+        window.location.href = paystackData.data.authorization_url;
+        return true;
+      }
+      throw new Error(paystackData.message || 'Payment gateway failed to initialize session.');
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      const isTimeout = err.name === 'AbortError';
+      const errorMessage = isTimeout
+        ? 'Payment gateway timed out. The server took too long to respond.'
+        : err.message || 'Unable to initialize card payment.';
+      throw new Error(errorMessage);
+    }
+  };
+
+  const handlePaymentGatewayFailure = (orderId: string, errorDetail?: string) => {
+    const waText =
+      `Hello MiCollections! I was attempting to pay for Order #${orderId} (${money(total)}) with Card/USSD, but experienced a gateway timeout or failure.\n` +
+      `Customer: ${formData.name} (${formData.phone})\n` +
+      `Delivery: ${formData.address}, ${formData.state}\n` +
+      `Items:\n` +
+      cart
+        .map((it) => {
+          const p = byId(it.id);
+          return `- ${it.qty}x ${p?.name || 'Item'} (${it.color}${it.size ? '/' + it.size : ''})`;
+        })
+        .join('\n') +
+      `\nTotal: ${money(total)}`;
+
+    openModal({
+      variant: 'error',
+      title: 'Payment Gateway Issue',
+      message: (
+        <div className="space-y-2 text-left">
+          <p>
+            {errorDetail || "We couldn't connect to Paystack to complete your card/USSD payment for "}
+            <strong>Order #{orderId}</strong>.
+          </p>
+          <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-[var(--ink)]">
+            <span className="font-semibold text-brand block mb-1">Your Cart Is Preserved!</span>
+            No funds were charged. You can retry card payment, instantly switch to Direct Bank Transfer, or conclude this order via WhatsApp.
+          </div>
+        </div>
+      ),
+      primaryAction: {
+        label: 'Retry Payment',
+        icon: <RefreshCw className="w-4 h-4" />,
+        variant: 'primary',
+        onClick: async () => {
+          closeModal();
+          setIsSubmitting(true);
+          try {
+            await attemptPaystack(orderId, formData.email, total);
+          } catch (retryErr: any) {
+            handlePaymentGatewayFailure(orderId, retryErr.message);
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      },
+      secondaryAction: {
+        label: 'Pay via Direct Bank Transfer',
+        icon: <Building2 className="w-4 h-4" />,
+        variant: 'outline',
+        onClick: async () => {
+          closeModal();
+          setIsSubmitting(true);
+          try {
+            await fetch('/api/orders', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: orderId,
+                paymentMethod: 'transfer',
+                payLabel: 'Bank Transfer',
+              }),
+            });
+            clearCart();
+            router.push(`/order-success?id=${orderId}`);
+          } catch {
+            clearCart();
+            router.push(`/order-success?id=${orderId}`);
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      },
+      extraActions: [
+        {
+          label: 'Complete on WhatsApp with Cart Preserved',
+          icon: <MessageSquare className="w-4 h-4" />,
+          variant: 'wa',
+          onClick: () => {
+            window.open(waLink(waText), '_blank');
+            closeModal();
+          },
+        },
+      ],
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -79,6 +202,7 @@ export default function CheckoutPage() {
 
     try {
       const orderPayload = {
+        userId: user?.id || null,
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
@@ -125,20 +249,12 @@ export default function CheckoutPage() {
 
       // If user selected Paystack Card/USSD payment
       if (paymentMethod === 'link') {
-        const paystackRes = await fetch('/api/checkout/paystack', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId,
-            email: formData.email,
-            amount: total,
-          }),
-        });
-
-        const paystackData = await paystackRes.json();
-        if (paystackData.status && paystackData.data?.authorization_url) {
-          clearCart();
-          window.location.href = paystackData.data.authorization_url;
+        try {
+          await attemptPaystack(orderId, formData.email, total);
+          return;
+        } catch (gatewayErr: any) {
+          console.error('Payment gateway error:', gatewayErr);
+          handlePaymentGatewayFailure(orderId, gatewayErr.message);
           return;
         }
       }
@@ -148,7 +264,29 @@ export default function CheckoutPage() {
       router.push(`/order-success?id=${orderId}`);
     } catch (err: any) {
       console.error('Order submission error:', err);
-      alert(err.message || 'Something went wrong placing your order. Please try again.');
+      showError(
+        'Could Not Place Order',
+        err.message || 'Something went wrong placing your order. Please try again.',
+        {
+          primaryAction: {
+            label: 'Try Again',
+            variant: 'primary',
+            onClick: closeModal,
+          },
+          extraActions: [
+            {
+              label: 'Complete on WhatsApp with Cart Preserved',
+              icon: <MessageSquare className="w-4 h-4" />,
+              variant: 'wa',
+              onClick: () => {
+                const waText = generateOrderText(null, cart, subtotal);
+                window.open(waLink(waText), '_blank');
+                closeModal();
+              },
+            },
+          ],
+        }
+      );
     } finally {
       setIsSubmitting(false);
     }

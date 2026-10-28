@@ -107,15 +107,6 @@ export const Footer: React.FC = () => {
                   My Orders & Profile
                 </Link>
               </li>
-              <li className="pt-2 border-t border-white/10 mt-1">
-                <Link
-                  href="/admin"
-                  className="inline-flex items-center gap-1.5 text-xs text-brand-light hover:text-white transition-colors font-semibold"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>Admin Operations Console &rarr;</span>
-                </Link>
-              </li>
             </ul>
           </div>
 

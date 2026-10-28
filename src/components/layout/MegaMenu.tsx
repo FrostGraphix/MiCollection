@@ -26,10 +26,9 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({ onClose }) => {
     <div
       role="region"
       aria-label="Shop categories menu"
-      className="absolute left-4 right-4 top-[calc(100%+12px)] p-5 md:p-6 rounded-3xl bg-[var(--surface)]/95 backdrop-blur-2xl border border-[var(--line)] shadow-2xl z-50 animate-dropdown-in before:absolute before:-top-4 before:left-0 before:right-0 before:h-4 before:content-[''] transition-all"
+      className="absolute left-4 right-4 top-[calc(100%+12px)] p-5 md:p-6 rounded-3xl bg-[var(--dropdown-bg)] backdrop-blur-2xl border border-[var(--line)] shadow-2xl z-50 animate-dropdown-in before:absolute before:-top-4 before:left-0 before:right-0 before:h-4 before:content-[''] transition-all"
       style={{
-        boxShadow:
-          '0 30px 70px -20px rgba(76, 29, 149, 0.25), 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--line)',
+        boxShadow: 'var(--dropdown-shadow)',
       }}
     >
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">

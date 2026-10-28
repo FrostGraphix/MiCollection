@@ -17,6 +17,8 @@
   --orchid: #c026d3;
   --accent-text: #6d28d9;
   --nav-bg: rgba(255, 255, 255, 0.74);
+  --dropdown-bg: rgba(255, 255, 255, 0.90);
+  --dropdown-shadow: 0 30px 70px -20px rgba(76, 29, 149, 0.25), 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--line);
   --pill: rgba(124, 58, 237, 0.1);
   --shadow: 0 24px 60px -26px rgba(76, 29, 149, 0.45);
   --art-a: #f4edff;
@@ -40,6 +42,8 @@
   --line: rgba(196, 181, 253, 0.16);
   --accent-text: #c4b5fd;
   --nav-bg: rgba(16, 9, 28, 0.72);
+  --dropdown-bg: rgba(19, 11, 33, 0.88);
+  --dropdown-shadow: 0 30px 70px -20px rgba(76, 29, 149, 0.35), 0 10px 30px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line);
   --pill: rgba(167, 139, 250, 0.16);
   --shadow: 0 28px 60px -26px rgba(0, 0, 0, 0.85);
   --art-a: #201437;

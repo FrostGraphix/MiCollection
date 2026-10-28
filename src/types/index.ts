@@ -99,6 +99,7 @@ export interface OrderCustomerInfo {
 }
 
 export interface OrderItemRecord {
+  productId?: number | string;
   name: string;
   price: number;
   qty: number;
@@ -139,6 +140,7 @@ export interface OrderRecord {
   wa: string;
   createdAt?: string;
   note?: string;
+  userId?: string;
 }
 
 export interface UserProfile {
@@ -165,7 +167,12 @@ export interface DiscountCoupon {
   description?: string;
 }
 
-export type CustomerVIPTier = 'VIP Platinum' | 'Gold Member' | 'Regular';
+export type CustomerVIPTier =
+  | 'VIP Platinum'
+  | 'Gold Member'
+  | 'Silver Member'
+  | 'Bronze Member'
+  | 'Regular';
 
 export interface CustomerProfile {
   id: string;

@@ -423,37 +423,41 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
               {/* Mobile Profile Dropdown: Favourite and Cart Under Profile Icon */}
               {isProfileMenuOpen && (
                 <div
-                  className="sm:hidden absolute right-0 top-[calc(100%+10px)] w-64 p-3 rounded-2xl bg-[var(--surface)]/95 backdrop-blur-2xl border border-[var(--line)] shadow-2xl z-50 animate-dropdown-in"
-                  style={{ boxShadow: 'var(--shadow)' }}
+                  className="sm:hidden absolute right-0 top-[calc(100%+12px)] w-72 p-3 rounded-3xl bg-[var(--dropdown-bg)] backdrop-blur-2xl border border-[var(--line)] shadow-2xl z-50 animate-dropdown-in before:absolute before:-top-3 before:inset-x-0 before:h-3 before:content-[''] transition-all"
+                  style={{ boxShadow: 'var(--dropdown-shadow)' }}
                 >
                   {/* Account / User Link */}
                   <Link
                     href={user ? '/account' : '/login'}
                     onClick={() => setIsProfileMenuOpen(false)}
-                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[var(--pill)] transition-colors border-b border-[var(--line)] mb-1"
+                    className="group/acc flex items-center gap-3 p-2.5 rounded-2xl border border-transparent hover:border-brand/20 hover:bg-[var(--pill)] transition-all duration-200"
                   >
-                    <div className="w-9 h-9 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand to-brand-deep text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm group-hover/acc:scale-105 transition-transform duration-200 flex-shrink-0">
                       {user ? user.email?.charAt(0) || 'U' : <UserIcon className="w-4 h-4" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <strong className="block font-display text-sm font-semibold truncate text-[var(--ink)]">
+                      <strong className="block font-display text-sm font-semibold truncate text-[var(--ink)] group-hover/acc:text-brand transition-colors duration-200">
                         {user ? user.email?.split('@')[0] : 'My Account'}
                       </strong>
-                      <small className="text-xs text-[var(--mute)]">
+                      <small className="block text-xs text-[var(--mute)] group-hover/acc:text-brand-deep/80 dark:group-hover/acc:text-brand-light/80 transition-colors duration-200">
                         {user ? 'View profile & orders' : 'Sign in / Register'}
                       </small>
                     </div>
                   </Link>
 
+                  <div className="h-px bg-[var(--line)] my-1.5" />
+
                   {/* Favourite Under Profile Icon */}
                   <Link
                     href="/wishlist"
                     onClick={() => setIsProfileMenuOpen(false)}
-                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand transition-colors text-sm font-medium"
+                    className="group/fav flex items-center justify-between p-2.5 rounded-2xl border border-transparent hover:border-brand/20 hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand transition-all duration-200 text-sm font-medium"
                   >
-                    <span className="flex items-center gap-2.5">
-                      <Heart className="w-4 h-4 text-pink-500" />
-                      <span>Favourite</span>
+                    <span className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-[var(--surface2)] border border-[var(--line)] flex items-center justify-center group-hover/fav:border-pink-500/30 group-hover/fav:bg-pink-500/10 transition-all duration-200 flex-shrink-0">
+                        <Heart className="w-4 h-4 text-pink-500 transition-transform duration-200 group-hover/fav:scale-110" />
+                      </div>
+                      <span className="font-medium">Favourite</span>
                     </span>
                     {wishlist.length > 0 ? (
                       <span className="min-w-[20px] h-[20px] px-1.5 rounded-full bg-brand text-white font-bold text-xs flex items-center justify-center shadow-sm">
@@ -470,11 +474,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
                       setIsProfileMenuOpen(false);
                       openDrawer();
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand transition-colors text-sm font-medium"
+                    className="group/cart w-full flex items-center justify-between p-2.5 rounded-2xl border border-transparent hover:border-brand/20 hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand transition-all duration-200 text-sm font-medium text-left"
                   >
-                    <span className="flex items-center gap-2.5">
-                      <ShoppingBag className="w-4 h-4 text-brand" />
-                      <span>Cart</span>
+                    <span className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-[var(--surface2)] border border-[var(--line)] flex items-center justify-center group-hover/cart:border-brand/30 group-hover/cart:bg-brand/10 transition-all duration-200 flex-shrink-0">
+                        <ShoppingBag className="w-4 h-4 text-brand transition-transform duration-200 group-hover/cart:scale-110" />
+                      </div>
+                      <span className="font-medium">Cart</span>
                     </span>
                     {cartCount > 0 ? (
                       <span className="cart-badge min-w-[20px] h-[20px] px-1.5 rounded-full bg-brand text-white font-bold text-xs flex items-center justify-center shadow-sm">

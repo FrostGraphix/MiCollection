@@ -28,10 +28,22 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     }
   }, [isOpen]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   // Handle escape key
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
         onClose();
       }
     };
@@ -51,16 +63,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6 md:p-20">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Search Catalog"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6 md:p-20 pb-[max(1.5rem,env(safe-area-inset-bottom))] overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       {/* Backdrop */}
       <div
         onClick={onClose}
         className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+        aria-hidden="true"
       />
 
       {/* Modal Dialog */}
       <div
-        className="relative w-full max-w-2xl bg-[var(--surface)] border border-[var(--line)] rounded-3xl shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl bg-[var(--surface)] border border-[var(--line)] rounded-3xl shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200 my-auto sm:my-0"
         style={{ boxShadow: 'var(--shadow)' }}
       >
         {/* Search Input Bar */}
@@ -92,7 +114,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Content Body */}
-        <div className="max-h-[70vh] overflow-y-auto p-6 space-y-6">
+        <div className="max-h-[70vh] overflow-y-auto p-5 sm:p-6 space-y-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           {query.trim() === '' ? (
             <>
               {/* Popular Searches */}

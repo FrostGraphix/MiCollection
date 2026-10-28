@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { notFound, useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Heart,
   ShoppingBag,
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { byId, catOf, PAL, PRODUCTS } from '@/lib/products';
 import { money, waLink } from '@/lib/utils';
-import { ColorKey } from '@/types';
+import { ColorKey, Product } from '@/types';
 import { ProductImage } from '@/components/shop/ProductImage';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { useCart } from '@/context/CartContext';
@@ -29,19 +29,32 @@ import { flyToCart } from '@/lib/effects';
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const productId = Number(params?.id);
-  const product = byId(productId);
+  const idParam = String(params?.id || '');
+  const numId = Number(idParam);
 
-  if (!product) {
-    notFound();
-  }
+  // Initialize with static product if available for instant SSR/hydration
+  const initialStaticProduct = !isNaN(numId) ? byId(numId) : undefined;
+
+  const [product, setProduct] = useState<Product | null>(initialStaticProduct || null);
+  const [loading, setLoading] = useState<boolean>(!initialStaticProduct);
+  const [notFoundState, setNotFoundState] = useState<boolean>(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>(() => {
+    if (initialStaticProduct) {
+      return PRODUCTS.filter(
+        (p) => p.cat === initialStaticProduct.cat && p.id !== initialStaticProduct.id
+      ).slice(0, 4);
+    }
+    return [];
+  });
 
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const [selectedColor, setSelectedColor] = useState<ColorKey>(product.colors[0]);
+  const [selectedColor, setSelectedColor] = useState<ColorKey>(
+    initialStaticProduct?.colors?.[0] || 'violet'
+  );
   const [selectedSize, setSelectedSize] = useState<string>(
-    product.sizes ? product.sizes[0] : ''
+    initialStaticProduct?.sizes?.[0] || ''
   );
   const [quantity, setQuantity] = useState<number>(1);
   const [activeGalleryView, setActiveGalleryView] = useState<number>(0);
@@ -55,16 +68,65 @@ export default function ProductDetailPage() {
   const mainCtaRef = useRef<HTMLDivElement>(null);
   const mainImgRef = useRef<HTMLDivElement>(null);
 
-  const isSaved = isInWishlist(product.id);
-  const category = catOf(product.cat);
+  // Fetch product from /api/products/[id] with live fallback for dynamic products
+  useEffect(() => {
+    let isMounted = true;
 
-  const productImages = product.images && product.images.length > 0
-    ? product.images
-    : [];
+    async function fetchDynamicProduct() {
+      if (!idParam) return;
+      try {
+        const res = await fetch(`/api/products/${idParam}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.product && isMounted) {
+            setProduct(data.product);
+            const rel = data.related || data.relatedProducts;
+            if (Array.isArray(rel) && rel.length > 0) {
+              setRelatedProducts(rel);
+            } else if (data.product.cat) {
+              setRelatedProducts(
+                PRODUCTS.filter(
+                  (p) => p.cat === data.product.cat && String(p.id) !== String(data.product.id)
+                ).slice(0, 4)
+              );
+            }
+            setNotFoundState(false);
+          }
+        } else if (res.status === 404) {
+          if (!initialStaticProduct && isMounted) {
+            setNotFoundState(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch dynamic product from /api/products/[id]:', err);
+        if (!initialStaticProduct && isMounted) {
+          setNotFoundState(true);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
 
-  const relatedProducts = PRODUCTS.filter(
-    (p) => p.cat === product.cat && p.id !== product.id
-  ).slice(0, 4);
+    fetchDynamicProduct();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [idParam, initialStaticProduct]);
+
+  // Sync color & size options when product loads
+  useEffect(() => {
+    if (product) {
+      if (product.colors && product.colors.length > 0 && !product.colors.includes(selectedColor)) {
+        setSelectedColor(product.colors[0]);
+      }
+      if (product.sizes && product.sizes.length > 0 && (!selectedSize || !product.sizes.includes(selectedSize))) {
+        setSelectedSize(product.sizes[0]);
+      }
+    }
+  }, [product]);
 
   // Monitor scroll position to show sticky mobile buy bar when scrolled past main CTA
   useEffect(() => {
@@ -83,8 +145,49 @@ export default function ProductDetailPage() {
     };
   }, []);
 
+  if (loading && !product) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 flex flex-col items-center justify-center min-h-[50vh]">
+        <div className="w-10 h-10 border-3 border-brand border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm text-[var(--mute)] font-medium">Loading product details...</p>
+      </div>
+    );
+  }
+
+  if (notFoundState || (!loading && !product)) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 text-center">
+        <h2 className="font-display text-3xl font-bold mb-3">Product Not Found</h2>
+        <p className="text-sm text-[var(--mute)] max-w-md mx-auto mb-6">
+          The product you are looking for might have been moved, archived, or is currently unavailable.
+        </p>
+        <Link href="/shop" className="btn-primary text-xs py-2.5 px-6 inline-flex">
+          Return to Shop
+        </Link>
+      </div>
+    );
+  }
+
+  // At this point product is guaranteed non-null
+  const currentProduct = product!;
+  const isSaved = isInWishlist(currentProduct.id);
+  const category = catOf(currentProduct.cat);
+
+  const activeColor: ColorKey =
+    currentProduct.colors && currentProduct.colors.includes(selectedColor)
+      ? selectedColor
+      : currentProduct.colors?.[0] || 'violet';
+
+  const activeSize: string =
+    currentProduct.sizes && selectedSize && currentProduct.sizes.includes(selectedSize)
+      ? selectedSize
+      : currentProduct.sizes?.[0] || '';
+
+  const productImages =
+    currentProduct.images && currentProduct.images.length > 0 ? currentProduct.images : [];
+
   const handleAddToCart = () => {
-    addToCart(product.id, selectedColor, selectedSize, quantity);
+    addToCart(currentProduct.id, activeColor, activeSize, quantity);
     if (mainImgRef.current) {
       flyToCart(mainImgRef.current, productImages[activeGalleryView] || productImages[0]);
     }
@@ -93,7 +196,7 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    addToCart(product.id, selectedColor, selectedSize, quantity);
+    addToCart(currentProduct.id, activeColor, activeSize, quantity);
     router.push('/checkout');
   };
 
@@ -106,7 +209,9 @@ export default function ProductDetailPage() {
     el.style.setProperty('--zy', `${zy}%`);
   };
 
-  const whatsappMessage = `Hello MiCollections, I would like to order: ${quantity} x ${product.name} (${PAL[selectedColor]?.n || selectedColor}${selectedSize ? ', Size ' + selectedSize : ''}) at ${money(product.price)} each.`;
+  const whatsappMessage = `Hello MiCollections, I would like to order: ${quantity} x ${currentProduct.name} (${
+    PAL[activeColor]?.n || activeColor
+  }${activeSize ? ', Size ' + activeSize : ''}) at ${money(currentProduct.price)} each.`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -116,12 +221,12 @@ export default function ProductDetailPage() {
           Home
         </Link>
         <span>/</span>
-        <Link href={`/shop?cat=${product.cat}`} className="hover:text-brand transition-colors">
+        <Link href={`/shop?cat=${currentProduct.cat}`} className="hover:text-brand transition-colors">
           {category.name}
         </Link>
         <span>/</span>
         <span className="text-[var(--ink)] font-semibold truncate max-w-xs sm:max-w-md">
-          {product.name}
+          {currentProduct.name}
         </span>
       </nav>
 
@@ -146,10 +251,10 @@ export default function ProductDetailPage() {
                 >
                   <ProductImage
                     src={thumbSrc}
-                    alt={`${product.name} thumbnail ${idx + 1}`}
+                    alt={`${currentProduct.name} thumbnail ${idx + 1}`}
                     fallbackArt={{
-                      type: product.art,
-                      color: selectedColor,
+                      type: currentProduct.art || 'dress',
+                      color: activeColor,
                       view: idx as 0 | 1 | 2 | 3,
                     }}
                   />
@@ -166,11 +271,11 @@ export default function ProductDetailPage() {
           >
             <ProductImage
               src={productImages[activeGalleryView] || productImages[0]}
-              alt={`${product.name} view ${activeGalleryView + 1}`}
+              alt={`${currentProduct.name} view ${activeGalleryView + 1}`}
               priority={true}
               fallbackArt={{
-                type: product.art,
-                color: selectedColor,
+                type: currentProduct.art || 'dress',
+                color: activeColor,
                 view: (activeGalleryView as 0 | 1 | 2 | 3) || 0,
               }}
             />
@@ -185,9 +290,9 @@ export default function ProductDetailPage() {
             </button>
 
             {/* Badge */}
-            {product.badge && (
+            {currentProduct.badge && (
               <span className="absolute left-3.5 top-3.5 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-brand text-white shadow-md z-10">
-                {product.badge}
+                {currentProduct.badge}
               </span>
             )}
 
@@ -204,17 +309,17 @@ export default function ProductDetailPage() {
               {category.name}
             </span>
             <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight mt-1">
-              {product.name}
+              {currentProduct.name}
             </h1>
 
             {/* Price and Stock status */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-3">
               <span className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--ink)]">
-                {money(product.price)}
+                {money(currentProduct.price)}
               </span>
-              {product.was && (
+              {currentProduct.was && (
                 <s className="text-sm sm:text-base text-[var(--mute)] font-mono">
-                  {money(product.was)}
+                  {money(currentProduct.was)}
                 </s>
               )}
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/20">
@@ -225,52 +330,54 @@ export default function ProductDetailPage() {
           </div>
 
           <p className="text-sm sm:text-base text-[var(--ink2)] leading-relaxed">
-            {product.desc}
+            {currentProduct.desc}
           </p>
 
           {/* Color Selector */}
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-2.5">
-              Colour: <b className="text-[var(--ink)] capitalize">{PAL[selectedColor]?.n || selectedColor}</b>
-            </h4>
-            <div className="flex flex-wrap gap-2.5">
-              {product.colors.map((cKey) => {
-                const isCurrent = selectedColor === cKey;
-                return (
-                  <button
-                    key={cKey}
-                    onClick={() => setSelectedColor(cKey)}
-                    className={`w-10 h-10 rounded-full border-2 p-0.5 transition-all ${
-                      isCurrent
-                        ? 'border-brand scale-110 shadow-md ring-2 ring-brand/20'
-                        : 'border-[var(--line)] hover:scale-105'
-                    }`}
-                    aria-label={`Select ${PAL[cKey]?.n || cKey}`}
-                    title={PAL[cKey]?.n || cKey}
-                  >
-                    <span
-                      className="block w-full h-full rounded-full shadow-inner"
-                      style={{ backgroundColor: PAL[cKey]?.main || '#7c3aed' }}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Size Selector */}
-          {product.sizes && product.sizes.length > 0 && (
+          {currentProduct.colors && currentProduct.colors.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-2.5">
-                Size: <b className="text-[var(--ink)]">{selectedSize}</b>
+                Colour: <b className="text-[var(--ink)] capitalize">{PAL[activeColor]?.n || activeColor}</b>
+              </h4>
+              <div className="flex flex-wrap gap-2.5">
+                {currentProduct.colors.map((cKey) => {
+                  const isCurrent = activeColor === cKey;
+                  return (
+                    <button
+                      key={cKey}
+                      onClick={() => setSelectedColor(cKey)}
+                      className={`w-10 h-10 rounded-full border-2 p-0.5 transition-all ${
+                        isCurrent
+                          ? 'border-brand scale-110 shadow-md ring-2 ring-brand/20'
+                          : 'border-[var(--line)] hover:scale-105'
+                      }`}
+                      aria-label={`Select ${PAL[cKey]?.n || cKey}`}
+                      title={PAL[cKey]?.n || cKey}
+                    >
+                      <span
+                        className="block w-full h-full rounded-full shadow-inner"
+                        style={{ backgroundColor: PAL[cKey]?.main || '#7c3aed' }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Size Selector */}
+          {currentProduct.sizes && currentProduct.sizes.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--mute)] mb-2.5">
+                Size: <b className="text-[var(--ink)]">{activeSize}</b>
               </h4>
               <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
+                {currentProduct.sizes.map((size) => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
                     className={`min-w-[48px] h-11 px-4 rounded-xl text-xs font-semibold border transition-all ${
-                      selectedSize === size
+                      activeSize === size
                         ? 'bg-[var(--ink)] text-[var(--bg)] border-transparent shadow'
                         : 'bg-[var(--surface)] border-[var(--line)] text-[var(--ink)] hover:border-brand'
                     }`}
@@ -340,7 +447,7 @@ export default function ProductDetailPage() {
             </a>
 
             <button
-              onClick={() => toggleWishlist(product.id)}
+              onClick={() => toggleWishlist(currentProduct.id)}
               className={`btn-ghost text-xs py-2.5 px-4 flex-1 sm:flex-initial justify-center ${
                 isSaved ? 'text-brand border-brand' : ''
               }`}
@@ -372,30 +479,32 @@ export default function ProductDetailPage() {
           {/* Accordions */}
           <div className="divide-y divide-[var(--line)] border-y border-[var(--line)] pt-2">
             {/* Features Accordion */}
-            <div>
-              <button
-                onClick={() =>
-                  setOpenAccordion(openAccordion === 'details' ? null : 'details')
-                }
-                className="w-full py-4 flex items-center justify-between text-left font-display font-semibold text-base hover:text-brand transition-colors"
-              >
-                <span>Features & Specifications</span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    openAccordion === 'details' ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-              {openAccordion === 'details' && (
-                <div className="pb-4 text-xs sm:text-sm text-[var(--ink2)]">
-                  <ul className="list-disc pl-5 space-y-1.5">
-                    {product.feat.map((f, idx) => (
-                      <li key={idx}>{f}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            {currentProduct.feat && currentProduct.feat.length > 0 && (
+              <div>
+                <button
+                  onClick={() =>
+                    setOpenAccordion(openAccordion === 'details' ? null : 'details')
+                  }
+                  className="w-full py-4 flex items-center justify-between text-left font-display font-semibold text-base hover:text-brand transition-colors"
+                >
+                  <span>Features & Specifications</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      openAccordion === 'details' ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {openAccordion === 'details' && (
+                  <div className="pb-4 text-xs sm:text-sm text-[var(--ink2)]">
+                    <ul className="list-disc pl-5 space-y-1.5">
+                      {currentProduct.feat.map((f, idx) => (
+                        <li key={idx}>{f}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Delivery & Returns Accordion */}
             <div>
@@ -489,11 +598,11 @@ export default function ProductDetailPage() {
           <div className="relative w-full max-w-4xl aspect-square max-h-[85vh] rounded-3xl overflow-hidden">
             <ProductImage
               src={productImages[activeGalleryView] || productImages[0]}
-              alt={product.name}
+              alt={currentProduct.name}
               priority={true}
               fallbackArt={{
-                type: product.art,
-                color: selectedColor,
+                type: currentProduct.art || 'dress',
+                color: activeColor,
                 view: (activeGalleryView as 0 | 1 | 2 | 3) || 0,
               }}
             />
@@ -515,16 +624,16 @@ export default function ProductDetailPage() {
             <div className="w-11 h-11 rounded-xl overflow-hidden bg-[var(--surface2)] border border-[var(--line)] flex-shrink-0 relative">
               <ProductImage
                 src={productImages[0]}
-                alt={product.name}
-                fallbackArt={{ type: product.art, color: selectedColor, view: 0 }}
+                alt={currentProduct.name}
+                fallbackArt={{ type: currentProduct.art || 'dress', color: activeColor, view: 0 }}
               />
             </div>
             <div className="min-w-0">
               <h4 className="font-display font-semibold text-xs truncate">
-                {product.name}
+                {currentProduct.name}
               </h4>
               <span className="font-display font-bold text-xs text-brand">
-                {money(product.price)}
+                {money(currentProduct.price)}
               </span>
             </div>
           </div>

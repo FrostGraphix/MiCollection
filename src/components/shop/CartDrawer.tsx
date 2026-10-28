@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
@@ -24,6 +24,29 @@ export const CartDrawer: React.FC = () => {
     addToCart,
   } = useCart();
 
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (isDrawerOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isDrawerOpen]);
+
+  // Handle escape key
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeDrawer();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDrawerOpen, closeDrawer]);
+
   if (pathname?.startsWith('/admin') || !isDrawerOpen) return null;
 
   const freeThreshold = CFG.freeOver;
@@ -37,15 +60,25 @@ export const CartDrawer: React.FC = () => {
   ).slice(0, 3);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Shopping Cart Drawer"
+      className="fixed inset-0 z-50 flex justify-end"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeDrawer();
+      }}
+    >
       {/* Scrim backdrop */}
       <div
         onClick={closeDrawer}
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        aria-hidden="true"
       />
 
       {/* Drawer Panel */}
       <div
+        onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-md bg-[var(--surface)] border-l border-[var(--line)] shadow-2xl flex flex-col h-full z-10 animate-in slide-in-from-right duration-300"
         style={{ boxShadow: 'var(--shadow)' }}
       >
@@ -206,7 +239,7 @@ export const CartDrawer: React.FC = () => {
 
         {/* Footer with Free Shipping Bar & Checkout */}
         {cart.length > 0 && (
-          <div className="p-5 border-t border-[var(--line)] bg-[var(--surface2)] flex flex-col gap-3">
+          <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-[var(--line)] bg-[var(--surface2)] flex flex-col gap-3">
             {/* Free Shipping Milestone */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">

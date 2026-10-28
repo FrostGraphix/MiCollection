@@ -1,8 +1,20 @@
-import { CartItem, ColorKey, OrderRecord } from '@/types';
+import { CartItem, ColorKey, CustomerVIPTier, OrderRecord } from '@/types';
 import { byId, CFG, PAL } from './products';
 
 export function money(n: number): string {
   return '₦' + Math.round(n).toLocaleString('en-NG');
+}
+
+export function calculateVIPTier(lifetimeValue: number): CustomerVIPTier {
+  if (lifetimeValue >= 250000) {
+    return 'VIP Platinum';
+  } else if (lifetimeValue >= 100000) {
+    return 'Gold Member';
+  } else if (lifetimeValue >= 50000) {
+    return 'Silver Member';
+  } else {
+    return 'Regular';
+  }
 }
 
 export function lineKey(item: { id: number; color: ColorKey; size?: string }): string {

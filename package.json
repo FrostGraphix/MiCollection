@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:supabase": "npx tsx --env-file=.env.local scripts/test-supabase-clients.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

@@ -91,7 +91,15 @@ export async function verifyPaystackPayment(reference: string) {
 export function verifyWebhookSignature(signature: string, rawBody: string): boolean {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey || secretKey.includes('your_paystack') || secretKey.includes('placeholder')) {
-    return true; // Allow sandbox testing
+    return true; // Allow sandbox testing without secret key
+  }
+
+  if (!signature) {
+    // If running with test dummy key in development and no signature sent
+    if (secretKey.includes('placeholder') || secretKey === 'test_secret') {
+      return true;
+    }
+    return false;
   }
 
   const hash = crypto
@@ -99,5 +107,14 @@ export function verifyWebhookSignature(signature: string, rawBody: string): bool
     .update(rawBody)
     .digest('hex');
 
-  return hash === signature;
+  try {
+    const hashBuffer = Buffer.from(hash, 'hex');
+    const sigBuffer = Buffer.from(signature, 'hex');
+    if (hashBuffer.length !== sigBuffer.length) {
+      return hash.toLowerCase() === signature.toLowerCase();
+    }
+    return crypto.timingSafeEqual(hashBuffer, sigBuffer);
+  } catch {
+    return hash.toLowerCase() === signature.toLowerCase();
+  }
 }

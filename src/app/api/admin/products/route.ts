@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { PRODUCTS, CATS } from '@/lib/products';
 import { Product } from '@/types';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+export const dynamic = 'force-dynamic';
 
 // Global cache to maintain product state across requests in the server instance
 const getProductsStore = (): Product[] => {
@@ -27,6 +29,36 @@ const getProductsStore = (): Product[] => {
   return g.__adminProducts;
 };
 
+// Map raw Supabase database row to Product type
+function mapSupabaseProduct(p: any): Product {
+  const price = Number(p.price) || 0;
+  return {
+    id: Number(p.id),
+    name: p.name || 'Untitled Product',
+    slug:
+      p.slug ||
+      (p.name
+        ? p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        : `product-${p.id}`),
+    cat: p.cat || 'wears',
+    price,
+    was: p.was !== null && p.was !== undefined && p.was !== '' ? Number(p.was) : null,
+    cogs: p.cogs !== undefined && p.cogs !== null ? Number(p.cogs) : Math.round(price * 0.55),
+    stock: p.stock !== undefined && p.stock !== null ? Number(p.stock) : 15,
+    lowStockThreshold: p.low_stock_threshold ?? p.lowStockThreshold ?? 5,
+    status: (p.status as any) || (p.is_active === false ? 'draft' : 'active'),
+    art: p.art || 'dress',
+    colors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : ['violet'],
+    sizes: Array.isArray(p.sizes) ? p.sizes : [],
+    badge: p.badge || null,
+    desc: p.desc || '',
+    feat: Array.isArray(p.feat) ? p.feat : [],
+    images: Array.isArray(p.images) && p.images.length > 0 ? p.images : [],
+    createdAt: p.created_at || p.createdAt || new Date().toISOString(),
+    updatedAt: p.updated_at || p.updatedAt || new Date().toISOString(),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -35,26 +67,113 @@ export async function GET(request: Request) {
     const status = searchParams.get('status');
     const idParam = searchParams.get('id');
 
-    // If Supabase is configured and has products, we can try to query, but fallback seamlessly
+    // 1. Try Supabase products table first if configured
     if (isSupabaseConfigured()) {
       try {
-        const supabase = createClient();
-        let query = supabase.from('products').select('*');
+        const supabase = createAdminClient();
+
+        // Single item query
         if (idParam) {
-          query = query.eq('id', idParam);
-          const { data, error } = await query.single();
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', idParam)
+            .single();
+
           if (!error && data) {
-            return NextResponse.json({ product: data });
+            return NextResponse.json({ product: mapSupabaseProduct(data) });
+          }
+        } else {
+          // Fetch all products from Supabase
+          let query = supabase.from('products').select('*');
+
+          // Category filter
+          if (cat && cat !== 'all') {
+            const catLower = cat.toLowerCase();
+            if (catLower === 'women') {
+              query = query.in('cat', ['women', 'wears', 'abayas']);
+            } else if (catLower === 'men') {
+              query = query.in('cat', ['men', 'wears']);
+            } else if (catLower === 'bags-shoes') {
+              query = query.in('cat', ['bags-shoes', 'bags', 'shoes']);
+            } else if (catLower === 'gadgets') {
+              query = query.in('cat', ['gadgets', 'electronics']);
+            } else if (catLower === 'kitchen-home') {
+              query = query.in('cat', ['kitchen-home', 'kitchen', 'home']);
+            } else {
+              query = query.eq('cat', cat);
+            }
+          }
+
+          // Status filter at DB level if applicable
+          if (status && status !== 'all') {
+            const sLower = status.toLowerCase();
+            if (sLower === 'active') {
+              query = query.eq('is_active', true);
+            } else if (sLower === 'draft' || sLower === 'archived') {
+              query = query.eq('is_active', false);
+            }
+          }
+
+          // Search query filter at DB level
+          if (search && search.trim()) {
+            const qTrim = search.trim();
+            if (!isNaN(Number(qTrim))) {
+              query = query.or(`id.eq.${qTrim},name.ilike.%${qTrim}%,cat.ilike.%${qTrim}%`);
+            } else {
+              query = query.or(`name.ilike.%${qTrim}%,cat.ilike.%${qTrim}%`);
+            }
+          }
+
+          const { data, error } = await query.order('id', { ascending: false });
+
+          if (!error && data && data.length > 0) {
+            let mapped = data.map(mapSupabaseProduct);
+
+            // Apply stock filters in JS if requested
+            if (status && status !== 'all') {
+              const sLower = status.toLowerCase();
+              if (sLower === 'in_stock') {
+                mapped = mapped.filter((p) => (p.stock ?? 0) > (p.lowStockThreshold ?? 5));
+              } else if (sLower === 'low_stock') {
+                mapped = mapped.filter((p) => {
+                  const stock = p.stock ?? 0;
+                  const thresh = p.lowStockThreshold ?? 5;
+                  return stock > 0 && stock <= thresh;
+                });
+              } else if (sLower === 'out_of_stock') {
+                mapped = mapped.filter((p) => (p.stock ?? 0) === 0);
+              }
+            }
+
+            // Client-side text filter refinement
+            if (search && search.trim()) {
+              const qLower = search.trim().toLowerCase();
+              mapped = mapped.filter((p) => {
+                const idMatch = String(p.id) === qLower;
+                const nameMatch = p.name?.toLowerCase().includes(qLower);
+                const catMatch = p.cat?.toLowerCase().includes(qLower);
+                const descMatch = p.desc?.toLowerCase().includes(qLower);
+                return idMatch || nameMatch || catMatch || descMatch;
+              });
+            }
+
+            return NextResponse.json({
+              products: mapped,
+              total: mapped.length,
+              categories: CATS,
+            });
           }
         }
       } catch (e) {
-        console.warn('Supabase product query error:', e);
+        console.warn('Supabase admin products GET error, falling back to local store:', e);
       }
     }
 
+    // 2. Fall back seamlessly to getProductsStore()
     const store = getProductsStore();
 
-    // Single item query
+    // Single item query fallback
     if (idParam) {
       const single = store.find((p) => String(p.id) === String(idParam));
       if (!single) {
@@ -168,6 +287,34 @@ export async function POST(request: Request) {
     // Prepend new product to the global store
     store.unshift(newProduct);
 
+    // Insert newly created product into Supabase products table using createAdminClient()
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        const dbPayload: any = {
+          id: newProduct.id,
+          name: newProduct.name,
+          cat: newProduct.cat,
+          price: newProduct.price,
+          was: newProduct.was,
+          art: newProduct.art,
+          colors: newProduct.colors,
+          sizes: newProduct.sizes,
+          badge: newProduct.badge,
+          desc: newProduct.desc,
+          feat: newProduct.feat,
+          is_active: newProduct.status !== 'draft' && newProduct.status !== 'archived',
+        };
+
+        const { error: insertError } = await supabase.from('products').insert(dbPayload);
+        if (insertError) {
+          console.warn('Supabase product insert warning:', insertError);
+        }
+      } catch (err) {
+        console.warn('Supabase product insert error:', err);
+      }
+    }
+
     return NextResponse.json(
       { success: true, message: 'Product created successfully', product: newProduct },
       { status: 201 }
@@ -226,6 +373,38 @@ export async function PUT(request: Request) {
 
     store[index] = updatedProduct;
 
+    // Update existing product in Supabase products table using createAdminClient()
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        const updatePayload: Record<string, any> = {};
+        if (body.name !== undefined) updatePayload.name = updatedProduct.name;
+        if (body.cat !== undefined) updatePayload.cat = updatedProduct.cat;
+        if (body.price !== undefined) updatePayload.price = updatedProduct.price;
+        if (body.was !== undefined) updatePayload.was = updatedProduct.was;
+        if (body.art !== undefined) updatePayload.art = updatedProduct.art;
+        if (Array.isArray(body.colors)) updatePayload.colors = updatedProduct.colors;
+        if (Array.isArray(body.sizes)) updatePayload.sizes = updatedProduct.sizes;
+        if (body.badge !== undefined) updatePayload.badge = updatedProduct.badge;
+        if (body.desc !== undefined) updatePayload.desc = updatedProduct.desc;
+        if (Array.isArray(body.feat)) updatePayload.feat = updatedProduct.feat;
+        if (body.status !== undefined) {
+          updatePayload.is_active = body.status === 'active';
+        }
+
+        const { error: updateError } = await supabase
+          .from('products')
+          .update(updatePayload)
+          .eq('id', id);
+
+        if (updateError) {
+          console.warn('Supabase product update warning:', updateError);
+        }
+      } catch (err) {
+        console.warn('Supabase product update error:', err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Product updated successfully',
@@ -243,7 +422,6 @@ export async function DELETE(request: Request) {
     let id = searchParams.get('id');
 
     if (!id) {
-      // Try body
       try {
         const body = await request.json();
         id = body?.id;
@@ -265,6 +443,21 @@ export async function DELETE(request: Request) {
     }
 
     const removed = store.splice(index, 1)[0];
+
+    // Remove product from Supabase products table (or set is_active = false)
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        // Try removing the product row
+        const { error: deleteError } = await supabase.from('products').delete().eq('id', numId);
+        if (deleteError) {
+          // If foreign key constraint or policy prevents deletion, soft delete
+          await supabase.from('products').update({ is_active: false }).eq('id', numId);
+        }
+      } catch (err) {
+        console.warn('Supabase product deletion error:', err);
+      }
+    }
 
     return NextResponse.json({
       success: true,

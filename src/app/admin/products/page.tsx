@@ -28,9 +28,11 @@ import {
   Tag,
   Sparkles,
 } from 'lucide-react';
+import { useModal } from '@/context/ModalContext';
 
 export default function AdminProductsPage() {
   const router = useRouter();
+  const { confirm } = useModal();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,9 +127,21 @@ export default function AdminProductsPage() {
 
   // Quick Action: Delete Product
   const handleDelete = async (id: number, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: 'Delete Product',
+      message: (
+        <span>
+          Are you sure you want to delete <strong className="text-[var(--ink)]">&ldquo;{name}&rdquo;</strong>? This cannot be undone.
+        </span>
+      ),
+      confirmText: 'Yes, Delete',
+      cancelText: 'Cancel',
+      danger: true,
+      variant: 'error',
+    });
+
+    if (!isConfirmed) return;
+
     try {
       const res = await fetch(`/api/admin/products?id=${id}`, {
         method: 'DELETE',

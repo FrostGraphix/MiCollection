@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { OrderRecord, OrderStatus } from '@/types';
 import { money } from '@/lib/utils';
 import { CFG, PAL } from '@/lib/products';
 import { ProductArt } from '@/components/shop/ProductArt';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { FeedbackModal } from '@/components/ui/FeedbackModal';
 import {
   X,
   CheckCircle2,
@@ -26,6 +27,8 @@ import {
   Receipt,
   FileText,
   Send,
+  Edit3,
+  Loader2,
 } from 'lucide-react';
 
 interface OrderModalProps {
@@ -46,6 +49,58 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
   const [viewingSlip, setViewingSlip] = useState(false);
 
+  // Status workflow state & transition feedback
+  const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order?.orderStatus || 'received');
+  const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
+  const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
+
+  // Note editing state
+  const [currentNote, setCurrentNote] = useState<string>(order?.note || '');
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState<string>(order?.note || '');
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [noteFeedback, setNoteFeedback] = useState<string | null>(null);
+
+  // Sync state when order prop updates
+  useEffect(() => {
+    if (order) {
+      setCurrentStatus(order.orderStatus || 'received');
+      setCurrentNote(order.note || '');
+      setNoteDraft(order.note || '');
+      setIsEditingNote(false);
+      setPendingStatus(null);
+    }
+  }, [order]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [isOpen]);
+
+  // Handle escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (pendingStatus) {
+          setPendingStatus(null);
+        } else if (isEditingNote) {
+          setIsEditingNote(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, pendingStatus, isEditingNote, onClose]);
+
   if (!isOpen || !order) return null;
 
   // Format Nigerian Phone for WhatsApp: strip leading 0, prepend 234
@@ -56,9 +111,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     ? cleanPhone
     : '234' + cleanPhone;
 
-  // Contextual WhatsApp Message based on order status
+  // Contextual WhatsApp Message based on current order status
   const getContextualWAMessage = (): string => {
-    switch (order.orderStatus) {
+    switch (currentStatus) {
       case 'confirmed':
         return `Hello ${order.name}! Thank you for ordering from MiCollections. Your order #${order.id} has been confirmed and is being packaged.`;
       case 'shipped':
@@ -85,9 +140,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  // Status Switcher Handler
-  const handleStatusChange = async (newStatus: OrderStatus) => {
-    if (order.orderStatus === newStatus || isUpdating) return;
+  // Status Switcher Prompt
+  const handleRequestStatusChange = (newStatus: OrderStatus) => {
+    if (currentStatus === newStatus || isUpdating) return;
+    setPendingStatus(newStatus);
+  };
+
+  // Execute confirmed status change
+  const executeStatusChange = async (newStatus: OrderStatus) => {
+    if (currentStatus === newStatus || isUpdating) return;
     setIsUpdating(true);
     try {
       const res = await fetch('/api/orders', {
@@ -100,14 +161,44 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       });
 
       if (res.ok) {
+        setCurrentStatus(newStatus);
         if (onStatusUpdate) {
           onStatusUpdate(order.id, newStatus);
         }
+        setStatusFeedback(`Order #${order.id} status transitioned to ${newStatus.toUpperCase()} ✓`);
+        setTimeout(() => setStatusFeedback(null), 3500);
       }
     } catch (err) {
       console.error('Failed to update status:', err);
     } finally {
       setIsUpdating(false);
+      setPendingStatus(null);
+    }
+  };
+
+  // Save Note Handler
+  const handleSaveNote = async () => {
+    if (isSavingNote) return;
+    setIsSavingNote(true);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: order.id,
+          note: noteDraft,
+        }),
+      });
+      if (res.ok) {
+        setCurrentNote(noteDraft);
+        setIsEditingNote(false);
+        setNoteFeedback('Order note updated successfully ✓');
+        setTimeout(() => setNoteFeedback(null), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to save note:', err);
+    } finally {
+      setIsSavingNote(false);
     }
   };
 
@@ -195,34 +286,48 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static">
-      {/* Modal Container */}
-      <div className="relative w-full max-w-4xl bg-[var(--surface)] text-[var(--ink)] border border-purple-500/20 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[92vh] print:max-h-none print:border-none print:shadow-none print:rounded-none">
-        
-        {/* Printable Packing Slip (rendered conditionally or formatted for @media print) */}
-        <div className={`p-8 bg-white text-black font-sans ${viewingSlip ? 'block' : 'hidden print:block'}`}>
-          <div className="border-b-2 border-purple-900 pb-6 mb-6 flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold font-serif text-purple-900">
-                Mi<span className="text-purple-600">Collections</span>
-              </h1>
-              <p className="text-xs text-gray-600 mt-1 uppercase tracking-widest font-semibold">
-                Abuja HQ • Dispatch Fulfillment Slip
-              </p>
-              <p className="text-xs text-gray-500">
-                WhatsApp: {CFG.phoneDisp} • Support: {CFG.email}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-xl font-bold text-gray-900">ORDER #{order.id}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                Date: {order.createdAt ? new Date(order.createdAt).toLocaleString('en-NG') : 'N/A'}
+    <>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Order #${order.id}`}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+        className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static"
+      >
+        {/* Modal Container */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-4xl bg-[var(--surface)] text-[var(--ink)] border border-purple-500/20 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[92vh] print:max-h-none print:border-none print:shadow-none print:rounded-none"
+        >
+          
+          {/* Printable Packing Slip (rendered conditionally or formatted for @media print) */}
+          <div className={`p-8 bg-white text-black font-sans ${viewingSlip ? 'block' : 'hidden print:block'}`}>
+            <div className="border-b-2 border-purple-900 pb-6 mb-6 flex justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-bold font-serif text-purple-900">
+                  Mi<span className="text-purple-600">Collections</span>
+                </h1>
+                <p className="text-xs text-gray-600 mt-1 uppercase tracking-widest font-semibold">
+                  Abuja HQ • Dispatch Fulfillment Slip
+                </p>
+                <p className="text-xs text-gray-500">
+                  WhatsApp: {CFG.phoneDisp} • Support: {CFG.email}
+                </p>
               </div>
-              <div className="mt-2 inline-block px-3 py-1 bg-gray-100 rounded text-xs font-bold uppercase text-gray-800">
-                {order.orderStatus}
+              <div className="text-right">
+                <div className="text-xl font-bold text-gray-900">ORDER #{order.id}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Date: {order.createdAt ? new Date(order.createdAt).toLocaleString('en-NG') : 'N/A'}
+                </div>
+                <div className="mt-2 inline-block px-3 py-1 bg-gray-100 rounded text-xs font-bold uppercase text-gray-800">
+                  {currentStatus}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Barcode styling */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 flex flex-col items-center justify-center">
@@ -389,7 +494,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2">
               {getPaymentBadge()}
-              {getStatusBadge(order.orderStatus)}
+              {getStatusBadge(currentStatus)}
             </div>
             <button
               onClick={onClose}
@@ -404,10 +509,27 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         {/* Modal Scrollable Body */}
         <div className={`flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 ${viewingSlip ? 'hidden' : 'block print:hidden'}`}>
           
+          {/* Status Transition Feedback Banner */}
+          {statusFeedback && (
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>{statusFeedback}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusFeedback(null)}
+                className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline px-2 py-0.5 rounded"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* Mobile badges */}
           <div className="flex sm:hidden items-center justify-between gap-2 flex-wrap">
             {getPaymentBadge()}
-            {getStatusBadge(order.orderStatus)}
+            {getStatusBadge(currentStatus)}
           </div>
 
           {/* Quick Action Bar (Status Switcher & Primary 1-Click Buttons) */}
@@ -421,9 +543,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   disabled={isUpdating}
-                  onClick={() => handleStatusChange('confirmed')}
+                  onClick={() => handleRequestStatusChange('confirmed')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    order.orderStatus === 'confirmed'
+                    currentStatus === 'confirmed'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-[var(--surface)] text-[var(--ink2)] border border-[var(--line)] hover:bg-purple-500/10'
                   }`}
@@ -434,9 +556,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
                 <button
                   disabled={isUpdating}
-                  onClick={() => handleStatusChange('dispatched')}
+                  onClick={() => handleRequestStatusChange('dispatched')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    order.orderStatus === 'dispatched' || order.orderStatus === 'shipped'
+                    currentStatus === 'dispatched' || currentStatus === 'shipped'
                       ? 'bg-amber-600 text-white shadow-md'
                       : 'bg-[var(--surface)] text-[var(--ink2)] border border-[var(--line)] hover:bg-amber-500/10'
                   }`}
@@ -447,9 +569,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
                 <button
                   disabled={isUpdating}
-                  onClick={() => handleStatusChange('delivered')}
+                  onClick={() => handleRequestStatusChange('delivered')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    order.orderStatus === 'delivered'
+                    currentStatus === 'delivered'
                       ? 'bg-emerald-600 text-white shadow-md'
                       : 'bg-[var(--surface)] text-[var(--ink2)] border border-[var(--line)] hover:bg-emerald-500/10'
                   }`}
@@ -460,9 +582,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
                 <button
                   disabled={isUpdating}
-                  onClick={() => handleStatusChange('cancelled')}
+                  onClick={() => handleRequestStatusChange('cancelled')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    order.orderStatus === 'cancelled'
+                    currentStatus === 'cancelled'
                       ? 'bg-rose-600 text-white shadow-md'
                       : 'bg-[var(--surface)] text-rose-500 border border-rose-500/20 hover:bg-rose-500/10'
                   }`}
@@ -599,11 +721,76 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   <span>ETA: <strong>{order.eta}</strong></span>
                 </div>
 
-                {order.note && (
-                  <div className="p-2 rounded-lg bg-purple-500/5 text-[var(--mute)] italic">
-                    Note: "{order.note}"
+                {/* Interactive Order Note Section */}
+                <div className="pt-2 border-t border-[var(--line)] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--mute)] flex items-center gap-1.5">
+                      <FileText className="w-3 h-3 text-brand" /> Fulfillment & Internal Notes
+                    </span>
+                    {!isEditingNote && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNoteDraft(currentNote);
+                          setIsEditingNote(true);
+                        }}
+                        className="text-[11px] text-brand hover:underline font-semibold flex items-center gap-1"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        {currentNote ? 'Edit Note' : '+ Add Note'}
+                      </button>
+                    )}
                   </div>
-                )}
+
+                  {isEditingNote ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={noteDraft}
+                        onChange={(e) => setNoteDraft(e.target.value)}
+                        placeholder="Add dispatch instructions, courier waybill number, or customer note..."
+                        rows={2}
+                        className="w-full text-xs p-2.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-[var(--ink)] focus:outline-none focus:border-brand resize-none"
+                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingNote(false)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium text-[var(--mute)] hover:bg-[var(--surface2)]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isSavingNote}
+                          onClick={handleSaveNote}
+                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-brand text-white hover:bg-brand-deep flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {isSavingNote ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3" />
+                          )}
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {currentNote ? (
+                        <div className="p-2.5 rounded-xl bg-purple-500/5 border border-purple-500/10 text-xs text-[var(--ink)] leading-relaxed italic">
+                          &ldquo;{currentNote}&rdquo;
+                        </div>
+                      ) : (
+                        <p className="text-xs text-[var(--mute)] italic">No notes recorded for this order.</p>
+                      )}
+                      {noteFeedback && (
+                        <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1 block">
+                          {noteFeedback}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -768,5 +955,44 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
       </div>
     </div>
+
+    {/* Status Transition Confirmation FeedbackModal */}
+    {pendingStatus && (
+      <FeedbackModal
+        isOpen={true}
+        onClose={() => setPendingStatus(null)}
+        variant={pendingStatus === 'cancelled' ? 'warning' : 'confirm'}
+        title={
+          pendingStatus === 'cancelled'
+            ? `Cancel Order #${order.id}?`
+            : `Transition to ${pendingStatus.toUpperCase()}?`
+        }
+        message={
+          pendingStatus === 'cancelled' ? (
+            <span>
+              Are you sure you want to mark Order <strong>#{order.id}</strong> as{' '}
+              <strong className="text-rose-600">CANCELLED</strong>? This will stop fulfillment.
+            </span>
+          ) : (
+            <span>
+              Are you sure you want to update Order <strong>#{order.id}</strong> from{' '}
+              <strong>{currentStatus.toUpperCase()}</strong> to{' '}
+              <strong className="text-brand">{pendingStatus.toUpperCase()}</strong>?
+            </span>
+          )
+        }
+        primaryAction={{
+          label: pendingStatus === 'cancelled' ? 'Yes, Cancel Order' : `Mark as ${pendingStatus.toUpperCase()}`,
+          variant: pendingStatus === 'cancelled' ? 'danger' : 'primary',
+          loading: isUpdating,
+          onClick: () => executeStatusChange(pendingStatus),
+        }}
+        secondaryAction={{
+          label: 'Keep ' + currentStatus.toUpperCase(),
+          onClick: () => setPendingStatus(null),
+        }}
+      />
+    )}
+  </>
   );
 };

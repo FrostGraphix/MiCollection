@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { ModalProvider } from '@/context/ModalContext';
 import { AnnouncementBar } from '@/components/layout/AnnouncementBar';
 import { HeaderWrapper } from '@/components/layout/HeaderWrapper';
 import { Footer } from '@/components/layout/Footer';
@@ -69,12 +70,14 @@ export default function RootLayout({
           <AuthProvider>
             <WishlistProvider>
               <CartProvider>
-                <AnnouncementBar />
-                <HeaderWrapper />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <CartDrawer />
-                <WhatsAppWidget />
+                <ModalProvider>
+                  <AnnouncementBar />
+                  <HeaderWrapper />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                  <CartDrawer />
+                  <WhatsAppWidget />
+                </ModalProvider>
               </CartProvider>
             </WishlistProvider>
           </AuthProvider>
