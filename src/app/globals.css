@@ -3,52 +3,63 @@
 @tailwind utilities;
 
 :root {
+  /* Canvas & Surfaces */
   --bg: #fcfaff;
-  --bg2: #f4edff;
   --surface: #ffffff;
   --surface2: #f6f0ff;
+  --glass: rgba(255, 255, 255, 0.88);
+
+  /* Typography */
   --ink: #0e0718;
   --ink2: #4a3d63;
   --mute: #6f6288;
+
+  /* Line & Interactive Tint */
   --line: rgba(76, 29, 149, 0.14);
+  --pill: rgba(124, 58, 237, 0.1);
+
+  /* Elevation */
+  --shadow: 0 30px 70px -20px rgba(76, 29, 149, 0.25), 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--line);
+
+  /* Inverted High-Contrast (Footer / Drawer) */
+  --inv: #07030d;
+  --inv-ink: #f7f2ff;
+
+  /* Animation & Behavior */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: light;
+
+  /* Backward-Compatibility Aliases */
+  --bg2: var(--surface2);
+  --nav-bg: var(--glass);
+  --dropdown-bg: var(--glass);
+  --dropdown-shadow: var(--shadow);
   --brand: #7c3aed;
   --brand2: #a78bfa;
   --brand-deep: #4c1d95;
   --orchid: #c026d3;
-  --accent-text: #6d28d9;
-  --nav-bg: rgba(255, 255, 255, 0.74);
-  --dropdown-bg: rgba(255, 255, 255, 0.90);
-  --dropdown-shadow: 0 30px 70px -20px rgba(76, 29, 149, 0.25), 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--line);
-  --pill: rgba(124, 58, 237, 0.1);
-  --shadow: 0 24px 60px -26px rgba(76, 29, 149, 0.45);
-  --art-a: #f4edff;
-  --art-b: #e3d4ff;
-  --art-c: #d2bbff;
-  --inv: #07030d;
-  --inv-ink: #f7f2ff;
   --wa: #25d366;
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  color-scheme: light;
 }
 
 [data-theme="dark"] {
+  /* Canvas & Surfaces */
   --bg: #08040f;
-  --bg2: #0f0819;
   --surface: #130b21;
   --surface2: #1b1130;
+  --glass: rgba(19, 11, 33, 0.88);
+
+  /* Typography */
   --ink: #f7f2ff;
   --ink2: #cdc2e6;
   --mute: #9a8cb8;
+
+  /* Line & Interactive Tint */
   --line: rgba(196, 181, 253, 0.16);
-  --accent-text: #c4b5fd;
-  --nav-bg: rgba(16, 9, 28, 0.72);
-  --dropdown-bg: rgba(19, 11, 33, 0.88);
-  --dropdown-shadow: 0 30px 70px -20px rgba(76, 29, 149, 0.35), 0 10px 30px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line);
   --pill: rgba(167, 139, 250, 0.16);
-  --shadow: 0 28px 60px -26px rgba(0, 0, 0, 0.85);
-  --art-a: #201437;
-  --art-b: #130b22;
-  --art-c: #2e1b55;
+
+  /* Elevation */
+  --shadow: 0 30px 70px -20px rgba(76, 29, 149, 0.35), 0 10px 30px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line);
+
   color-scheme: dark;
 }
 

@@ -440,17 +440,17 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
                 <div className="flex items-center gap-3 flex-shrink-0">
                   {/* Payment method badge (hidden on extra small) */}
                   <span
-                    className={`hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${payment.className}`}
+                    className={`hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${payment?.className || 'bg-brand/10 text-brand'}`}
                   >
-                    {payment.label}
+                    {payment?.label || 'Payment'}
                   </span>
 
                   {/* Status pill */}
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${status.className}`}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${status?.className || 'bg-amber-500/10 text-amber-600'}`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                    {status.label}
+                    <span className={`w-1.5 h-1.5 rounded-full ${status?.dot || 'bg-amber-500'}`} />
+                    {status?.label || 'Received'}
                   </span>
 
                   {/* Order Amount */}
@@ -489,10 +489,10 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
                   </span>
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                      getStatusBadge(selectedOrder.orderStatus).className
+                      getStatusBadge(selectedOrder.orderStatus)?.className || 'bg-amber-500/10 text-amber-600'
                     }`}
                   >
-                    {getStatusBadge(selectedOrder.orderStatus).label}
+                    {getStatusBadge(selectedOrder.orderStatus)?.label || 'Received'}
                   </span>
                 </div>
                 <p className="text-xs text-[var(--mute)] mt-1">

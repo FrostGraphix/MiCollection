@@ -15,19 +15,21 @@ const config: Config = {
           light: '#a78bfa',
           deep: '#4c1d95',
         },
-        orchid: {
-          DEFAULT: '#c026d3',
-          dark: '#86198f',
-          light: '#f0abfc',
-        },
-        accent: {
-          text: '#6d28d9',
-        },
+        orchid: '#c026d3',
         wa: {
           DEFAULT: '#25d366',
           dark: '#128c7e',
           deep: '#075e54',
         },
+        // Semantic theme tokens mapped to CSS variables
+        surface: 'var(--surface)',
+        surface2: 'var(--surface2)',
+        glass: 'var(--glass)',
+        ink: 'var(--ink)',
+        ink2: 'var(--ink2)',
+        mute: 'var(--mute)',
+        line: 'var(--line)',
+        pill: 'var(--pill)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
