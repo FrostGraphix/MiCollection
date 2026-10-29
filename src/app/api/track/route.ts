@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { localOrdersCache, parseOrderDispatchInfo } from '@/lib/ordersCache';
 import { byId } from '@/lib/products';
+import { STAFF_EMAILS } from '@/lib/adminAuthServer';
 import { OrderRecord, OrderTrackingInfo, TrackingMilestone, OrderItemRecord } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -54,16 +55,12 @@ async function resolveSessionUser(request: Request) {
 
 function isStaffUser(user: any): boolean {
   if (!user || !user.email) return false;
-  const email = user.email.toLowerCase();
-  if (
-    email.includes('admin@micollections.com') ||
-    email.includes('manager@micollections.com') ||
-    email.includes('dispatch@micollections.com')
-  ) {
+  const role = user.app_metadata?.role || user.user_metadata?.role;
+  if (role && ['super_admin', 'store_manager', 'dispatcher'].includes(role)) {
     return true;
   }
-  const role = user.app_metadata?.role || user.user_metadata?.role;
-  return ['super_admin', 'store_manager', 'dispatcher'].includes(role);
+  const email = user.email.toLowerCase().trim();
+  return STAFF_EMAILS.includes(email);
 }
 
 export async function GET(request: Request) {

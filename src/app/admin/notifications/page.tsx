@@ -35,7 +35,9 @@ export default function AdminNotificationsPage() {
   const [emailTemplate, setEmailTemplate] = useState<'order_confirmation' | 'admin_alert' | 'dispatch'>('order_confirmation');
   const [emailHtml, setEmailHtml] = useState<string>('');
   const [emailPreviewMode, setEmailPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [testEmailAddress, setTestEmailAddress] = useState('admin@micollections.com');
+  const [testEmailAddress, setTestEmailAddress] = useState(
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@micollections.com'
+  );
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSendStatus, setEmailSendStatus] = useState<string | null>(null);
 

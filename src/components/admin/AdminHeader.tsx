@@ -474,7 +474,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                   {currentUser?.name || 'MiCollections Admin'}
                 </p>
                 <p className="text-[11px] text-[var(--mute)] truncate mt-0.5">
-                  {currentUser?.email || 'admin@micollections.com'}
+                  {currentUser?.email || process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@micollections.com'}
                 </p>
                 <div className="mt-2.5 flex items-center gap-2">
                   {renderRoleBadge(currentUser?.role)}

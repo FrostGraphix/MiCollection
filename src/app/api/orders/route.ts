@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
+import { STAFF_EMAILS } from '@/lib/adminAuthServer';
 import { generateOrderText } from '@/lib/utils';
 import { byId } from '@/lib/products';
 import { OrderItemRecord, OrderRecord, OrderStatus } from '@/types';
@@ -26,7 +27,7 @@ async function resolveSessionUser(request: Request) {
         if (role && ['super_admin', 'store_manager', 'dispatcher'].includes(role)) {
           return {
             id: parsed.id || 'admin-user',
-            email: parsed.email || 'admin@micollections.com',
+            email: parsed.email || process.env.ADMIN_EMAIL || 'admin@micollections.com',
             user_metadata: { role, full_name: parsed.name },
             app_metadata: { role },
           };
@@ -41,8 +42,8 @@ async function resolveSessionUser(request: Request) {
   if (!isSupabaseConfigured()) {
     return {
       id: 'sandbox-admin',
-      email: 'admin@micollections.com',
-      user_metadata: { role: 'super_admin', full_name: 'Mariam Siyaka' },
+      email: process.env.ADMIN_EMAIL || 'admin@micollections.com',
+      user_metadata: { role: 'super_admin', full_name: process.env.ADMIN_NAME || 'Mariam Siyaka' },
       app_metadata: { role: 'super_admin' },
     };
   }
@@ -82,14 +83,7 @@ function isStaffUser(user: any): boolean {
     return true;
   }
   const email = (user.email || '').toLowerCase().trim();
-  if (
-    email === 'admin@micollections.com' ||
-    email === 'manager@micollections.com' ||
-    email === 'dispatch@micollections.com'
-  ) {
-    return true;
-  }
-  return false;
+  return STAFF_EMAILS.includes(email);
 }
 
 function isInternalOrSigned(request: Request): boolean {

@@ -11,11 +11,14 @@ import { isSupabaseConfigured } from '@/lib/supabase/client';
 export const STAFF_ROLES = ['super_admin', 'store_manager', 'dispatcher'] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
-export const STAFF_EMAILS = [
-  'admin@micollections.com',
-  'manager@micollections.com',
-  'dispatch@micollections.com',
-];
+export const STAFF_EMAILS: string[] = (
+  process.env.STAFF_EMAILS ||
+  process.env.ADMIN_EMAILS ||
+  'admin@micollections.com,manager@micollections.com,dispatch@micollections.com'
+)
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 /**
  * Validates whether the incoming HTTP request is made by an authorized staff member.

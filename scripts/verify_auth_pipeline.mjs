@@ -37,10 +37,14 @@ async function runAuthTests() {
   // -------------------------------------------------------------
   console.log('--- Test Suite 1: Staff & Admin Live Supabase Sign In ---');
 
+  const defaultAdminPass = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123@MiCollection';
+  const defaultManagerPass = process.env.MANAGER_DEFAULT_PASSWORD || 'manager123@MiCollection';
+  const defaultDispatchPass = process.env.DISPATCH_DEFAULT_PASSWORD || 'dispatch123@MiCollection';
+
   const staffRoles = [
-    { email: 'admin@micollections.com', pass: 'admin123@MiCollection', expectedRole: 'super_admin' },
-    { email: 'manager@micollections.com', pass: 'manager123@MiCollection', expectedRole: 'store_manager' },
-    { email: 'dispatch@micollections.com', pass: 'dispatch123@MiCollection', expectedRole: 'dispatcher' },
+    { email: process.env.ADMIN_EMAIL || 'admin@micollections.com', pass: defaultAdminPass, expectedRole: 'super_admin' },
+    { email: process.env.MANAGER_EMAIL || 'manager@micollections.com', pass: defaultManagerPass, expectedRole: 'store_manager' },
+    { email: process.env.DISPATCH_EMAIL || 'dispatch@micollections.com', pass: defaultDispatchPass, expectedRole: 'dispatcher' },
   ];
 
   for (const staff of staffRoles) {

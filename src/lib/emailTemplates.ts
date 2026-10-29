@@ -109,9 +109,9 @@ export function generateOrderConfirmationEmail(order: OrderRecord): string {
           Please transfer the exact total of <strong>${money(order.total)}</strong> using your Order ID <strong>${order.id}</strong> as narration:
         </p>
         <table role="presentation" width="100%" cellpadding="6" cellspacing="0" style="background: #ffffff; border-radius: 8px; border: 1px solid #fde68a; font-size: 13px; color: #451a03;">
-          <tr><td><strong>Bank:</strong></td><td>Zenith Bank</td></tr>
-          <tr><td><strong>Account Number:</strong></td><td><strong style="color: #7c3aed; font-size: 15px;">1012345678</strong></td></tr>
-          <tr><td><strong>Account Name:</strong></td><td>MiCollections Ltd</td></tr>
+          <tr><td><strong>Bank:</strong></td><td>${CFG.bank.name}</td></tr>
+          <tr><td><strong>Account Number:</strong></td><td><strong style="color: #7c3aed; font-size: 15px;">${CFG.bank.accountNumber}</strong></td></tr>
+          <tr><td><strong>Account Name:</strong></td><td>${CFG.bank.accountName}</td></tr>
           <tr><td><strong>Reference:</strong></td><td>${order.id}</td></tr>
         </table>
         <p style="margin: 10px 0 0 0; font-size: 12px; color: #92400e;">

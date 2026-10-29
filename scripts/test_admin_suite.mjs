@@ -31,8 +31,8 @@ async function checkAll() {
     try {
       const client = createClient(supabaseUrl, anonKey);
       const { data, error } = await client.auth.signInWithPassword({
-        email: 'admin@micollections.com',
-        password: 'admin123@MiCollection',
+        email: process.env.ADMIN_EMAIL || 'admin@micollections.com',
+        password: process.env.ADMIN_DEFAULT_PASSWORD || 'admin123@MiCollection',
       });
       if (!error && data?.session?.access_token) {
         staffToken = data.session.access_token;

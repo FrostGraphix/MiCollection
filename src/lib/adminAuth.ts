@@ -20,7 +20,6 @@ export interface AdminUser {
 
 export interface AdminPreset {
   email: string;
-  password?: string;
   role: AdminRole;
   name: string;
   roleTitle: string;
@@ -31,28 +30,25 @@ export interface AdminPreset {
 // Live Supabase Authenticated Staff Accounts
 export const ADMIN_PRESETS: Record<AdminRole, AdminPreset> = {
   super_admin: {
-    email: 'admin@micollections.com',
-    password: 'admin123@MiCollection',
+    email: process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@micollections.com',
     role: 'super_admin',
-    name: 'Mariam Siyaka',
+    name: process.env.NEXT_PUBLIC_ADMIN_NAME || 'Mariam Siyaka',
     roleTitle: 'Super Admin',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     department: 'Executive Operations',
   },
   store_manager: {
-    email: 'manager@micollections.com',
-    password: 'manager123@MiCollection',
+    email: process.env.NEXT_PUBLIC_MANAGER_EMAIL || 'manager@micollections.com',
     role: 'store_manager',
-    name: 'Aminu Bello',
+    name: process.env.NEXT_PUBLIC_MANAGER_NAME || 'Aminu Bello',
     roleTitle: 'Store Manager',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     department: 'Merchandising & Catalog',
   },
   dispatcher: {
-    email: 'dispatch@micollections.com',
-    password: 'dispatch123@MiCollection',
+    email: process.env.NEXT_PUBLIC_DISPATCH_EMAIL || 'dispatch@micollections.com',
     role: 'dispatcher',
-    name: 'Chidi Okafor',
+    name: process.env.NEXT_PUBLIC_DISPATCH_NAME || 'Chidi Okafor',
     roleTitle: 'Dispatcher',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
     department: 'Abuja & Nationwide Logistics',

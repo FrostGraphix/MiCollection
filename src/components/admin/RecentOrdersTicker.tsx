@@ -200,20 +200,15 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
   };
 
   // Status badge styling
-  const getStatusBadge = (status: AdminOrder['orderStatus']) => {
+  const getStatusBadge = (status?: string | null) => {
     switch (status) {
-      case 'received':
-        return {
-          label: 'Received',
-          className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
-          dot: 'bg-amber-500',
-        };
       case 'confirmed':
         return {
           label: 'Confirmed',
           className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
           dot: 'bg-blue-500',
         };
+      case 'shipped':
       case 'dispatched':
         return {
           label: 'Dispatched',
@@ -226,11 +221,24 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
           className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
           dot: 'bg-emerald-500',
         };
+      case 'cancelled':
+        return {
+          label: 'Cancelled',
+          className: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+          dot: 'bg-rose-500',
+        };
+      case 'received':
+      default:
+        return {
+          label: 'Received',
+          className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+          dot: 'bg-amber-500',
+        };
     }
   };
 
   // Payment badge styling
-  const getPaymentBadge = (method: AdminOrder['paymentMethod']) => {
+  const getPaymentBadge = (method?: string | null) => {
     switch (method) {
       case 'transfer':
         return {
@@ -238,6 +246,8 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
           className: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20',
         };
       case 'link':
+      case 'card':
+      case 'paystack':
         return {
           label: 'Card / USSD',
           className: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20',
@@ -246,6 +256,11 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
         return {
           label: 'Pay on Delivery',
           className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+        };
+      default:
+        return {
+          label: method ? String(method).toUpperCase() : 'Online Payment',
+          className: 'bg-brand/10 text-brand border border-brand/20',
         };
     }
   };

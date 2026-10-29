@@ -80,11 +80,14 @@ export async function updateSession(request: NextRequest) {
         const role = (user.app_metadata?.role || user.user_metadata?.role) as string | undefined;
         const validRoles = ['super_admin', 'store_manager', 'dispatcher'];
         const email = (user.email || '').toLowerCase().trim();
-        const staffEmails = [
-          'admin@micollections.com',
-          'manager@micollections.com',
-          'dispatch@micollections.com',
-        ];
+        const staffEmails = (
+          process.env.STAFF_EMAILS ||
+          process.env.ADMIN_EMAILS ||
+          'admin@micollections.com,manager@micollections.com,dispatch@micollections.com'
+        )
+          .split(',')
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean);
 
         if (
           (role && validRoles.includes(role)) ||
@@ -106,11 +109,14 @@ export async function updateSession(request: NextRequest) {
               const role = (u.app_metadata?.role || u.user_metadata?.role) as string | undefined;
               const validRoles = ['super_admin', 'store_manager', 'dispatcher'];
               const email = (u.email || '').toLowerCase().trim();
-              const staffEmails = [
-                'admin@micollections.com',
-                'manager@micollections.com',
-                'dispatch@micollections.com',
-              ];
+              const staffEmails = (
+                process.env.STAFF_EMAILS ||
+                process.env.ADMIN_EMAILS ||
+                'admin@micollections.com,manager@micollections.com,dispatch@micollections.com'
+              )
+                .split(',')
+                .map((e) => e.trim().toLowerCase())
+                .filter(Boolean);
 
               if (
                 (role && validRoles.includes(role)) ||

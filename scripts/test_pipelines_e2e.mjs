@@ -233,8 +233,8 @@ async function runTest() {
 
   // Acquire staff token for admin actions
   const { data: staffAuth } = await clientSupabase.auth.signInWithPassword({
-    email: 'admin@micollections.com',
-    password: 'admin123@MiCollection',
+    email: process.env.ADMIN_EMAIL || 'admin@micollections.com',
+    password: process.env.ADMIN_DEFAULT_PASSWORD || 'admin123@MiCollection',
   });
   const staffToken = staffAuth?.session?.access_token;
 

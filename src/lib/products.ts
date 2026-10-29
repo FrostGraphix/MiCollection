@@ -23,6 +23,11 @@ export const CFG = {
       fee: 0,
     },
   } as Record<DeliveryType, DeliveryOption>,
+  bank: {
+    name: process.env.NEXT_PUBLIC_BANK_NAME || 'Zenith Bank',
+    accountNumber: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || '1012345678',
+    accountName: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME || 'MiCollections Ltd',
+  },
   promo: {
     code: 'WELCOME10',
     pct: 10,
