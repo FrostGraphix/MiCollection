@@ -280,7 +280,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
     <>
       <header
         ref={headerRef}
-        className={`sticky top-3 z-50 transition-transform duration-500 max-w-7xl mx-auto px-4 relative ${
+        className={`sticky top-3 z-50 transition-transform duration-500 w-full max-w-7xl mx-auto px-4 relative ${
           isHidden ? '-translate-y-28' : 'translate-y-0'
         }`}
       >
