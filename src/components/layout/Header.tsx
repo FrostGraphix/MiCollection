@@ -388,7 +388,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
             {/* Search */}
             <button
               onClick={onOpenSearch}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
               aria-label="Search store"
               title="Search store (Ctrl+K or /)"
             >
@@ -398,7 +398,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
             {/* Dark / Light Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
               aria-label="Toggle theme"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
@@ -412,7 +412,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
             {/* Wishlist (Desktop) */}
             <Link
               href="/wishlist"
-              className="hidden sm:flex group/wishlist relative w-9 h-9 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+              className="hidden sm:flex group/wishlist relative w-10 h-10 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
               aria-label="Wishlist"
               title="Saved items"
             >
@@ -428,7 +428,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
             <button
               id="headerCartBtn"
               onClick={openDrawer}
-              className="hidden sm:flex group/cart relative w-9 h-9 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+              className="hidden sm:flex group/cart relative w-10 h-10 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
               aria-label="Shopping cart"
               title="View shopping bag"
             >
@@ -474,7 +474,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
                   <button
                     type="button"
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                    className={`group/user relative w-9 h-9 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200 ${
+                    className={`group/user relative w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200 ${
                       isProfileMenuOpen ? 'bg-[var(--pill)] text-brand' : ''
                     }`}
                     aria-label="Sign in or register"
@@ -490,7 +490,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className={`sm:hidden group/user relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+                className={`sm:hidden group/user relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
                   isProfileMenuOpen
                     ? 'bg-[var(--pill)] text-brand'
                     : 'hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand'
@@ -736,7 +736,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
             {/* Mobile Hamburger Menu Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] active:scale-90 transition-all duration-200"
+              className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] active:scale-90 transition-all duration-200"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
