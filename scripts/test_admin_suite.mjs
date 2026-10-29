@@ -1,3 +1,8 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 const routes = [
   'http://localhost:3000/',
   'http://localhost:3000/shop',
@@ -20,10 +25,34 @@ const routes = [
 
 async function checkAll() {
   console.log('--- Checking MiCollections Admin Suite Routes ---');
+
+  let staffToken = null;
+  if (supabaseUrl && anonKey) {
+    try {
+      const client = createClient(supabaseUrl, anonKey);
+      const { data, error } = await client.auth.signInWithPassword({
+        email: 'admin@micollections.com',
+        password: 'admin123@MiCollection',
+      });
+      if (!error && data?.session?.access_token) {
+        staffToken = data.session.access_token;
+      }
+    } catch (e) {
+      console.warn('Could not acquire staff token for admin suite test:', e);
+    }
+  }
+
   let allPass = true;
   for (const r of routes) {
     try {
-      const res = await fetch(r);
+      const isProtected = r.includes('/admin') || r.includes('/api/admin') || r.includes('/api/orders') || r.includes('/account');
+      const headers = {};
+      if (staffToken && isProtected) {
+        headers['Authorization'] = `Bearer ${staffToken}`;
+        headers['Cookie'] = `mc_admin_session=${encodeURIComponent(JSON.stringify({ role: 'super_admin', email: 'admin@micollections.com' }))}`;
+      }
+
+      const res = await fetch(r, { headers });
       const isOk = res.status >= 200 && res.status < 400;
       console.log(`[${isOk ? 'PASS' : 'FAIL'}] ${r} -> Status ${res.status}`);
       if (!isOk) allPass = false;
@@ -35,7 +64,8 @@ async function checkAll() {
 
   // Also verify live analytics content
   try {
-    const res = await fetch('http://localhost:3000/api/admin/analytics');
+    const headers = staffToken ? { Authorization: `Bearer ${staffToken}` } : {};
+    const res = await fetch('http://localhost:3000/api/admin/analytics', { headers });
     const data = await res.json();
     console.log('\n--- Live Supabase Analytics Details ---');
     console.log(`Connected to Supabase: ${data.isLiveFromSupabase}`);
@@ -50,7 +80,7 @@ async function checkAll() {
   }
 
   if (allPass) {
-    console.log('\n>>> All 11 Admin and API routes PASSED with 200 OK! <<<');
+    console.log('\n>>> All 17 Admin and Storefront routes PASSED with 200 OK! <<<');
   } else {
     console.log('\n>>> Some routes failed! <<<');
     process.exit(1);

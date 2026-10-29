@@ -14,7 +14,7 @@
     "test:track": "node --env-file=.env.local scripts/test_order_tracking_pipeline.mjs",
     "test:security": "node --env-file=.env.local scripts/verify_security_hardening.mjs",
     "test:pipelines": "node --env-file=.env.local scripts/test_pipelines_e2e.mjs",
-    "test:admin": "node scripts/test_admin_suite.mjs"
+    "test:admin": "node --env-file=.env.local scripts/test_admin_suite.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

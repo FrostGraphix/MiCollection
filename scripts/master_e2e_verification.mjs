@@ -151,9 +151,14 @@ async function runApiTests() {
     recordResult('api', 'GET /api/track', false, e.message);
   }
 
+  const adminHeaders = {
+    'Content-Type': 'application/json',
+    'Cookie': 'mc_admin_session=%7B%22role%22%3A%22super_admin%22%2C%22email%22%3A%22admin%40micollections.com%22%7D;',
+  };
+
   // 6. GET /api/admin/analytics (Executive Business Intelligence)
   try {
-    const res = await fetch(`${BASE_URL}/api/admin/analytics`);
+    const res = await fetch(`${BASE_URL}/api/admin/analytics`, { headers: adminHeaders });
     const data = await res.json();
     const passed = res.status === 200 && data.success === true && !!data.kpis?.grossRevenue && Array.isArray(data.stateDistribution);
     recordResult('api', 'GET /api/admin/analytics (Executive KPIs & State Distribution)', passed, `Status ${res.status}, GMV: ${data.kpis?.grossRevenue?.formatted}, Abuja share: ${data.stateDistribution?.[0]?.share}%`);
@@ -163,7 +168,7 @@ async function runApiTests() {
 
   // 7. GET /api/admin/customers (CRM Lifetime Value)
   try {
-    const res = await fetch(`${BASE_URL}/api/admin/customers`);
+    const res = await fetch(`${BASE_URL}/api/admin/customers`, { headers: adminHeaders });
     const data = await res.json();
     const passed = res.status === 200 && Array.isArray(data.customers);
     recordResult('api', 'GET /api/admin/customers (Customer CRM & LTV)', passed, `Status ${res.status}, Shoppers count: ${data.customers?.length}`);
@@ -173,7 +178,7 @@ async function runApiTests() {
 
   // 8. GET /api/admin/notifications (Live Alerts Stream)
   try {
-    const res = await fetch(`${BASE_URL}/api/admin/notifications`);
+    const res = await fetch(`${BASE_URL}/api/admin/notifications`, { headers: adminHeaders });
     const data = await res.json();
     const passed = res.status === 200 && Array.isArray(data.notifications);
     recordResult('api', 'GET /api/admin/notifications (Notification Feed)', passed, `Status ${res.status}, unread count: ${data.unreadCount}, total: ${data.notifications?.length}`);
@@ -185,7 +190,7 @@ async function runApiTests() {
   try {
     const res = await fetch(`${BASE_URL}/api/admin/email`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders,
       body: JSON.stringify({
         orderId: targetOrderId,
         customerEmail: testEmail,

@@ -182,7 +182,13 @@ async function runTest() {
     body: JSON.stringify(orderPayload),
   });
 
-  const createOrderJson = await createOrderRes.json();
+  const resText = await createOrderRes.text();
+  let createOrderJson;
+  try {
+    createOrderJson = JSON.parse(resText);
+  } catch {
+    throw new Error(`Order creation failed with status ${createOrderRes.status}: ${resText.slice(0, 300)}`);
+  }
   if (!createOrderRes.ok || !createOrderJson.success) {
     throw new Error(`Order creation failed: ${JSON.stringify(createOrderJson)}`);
   }
