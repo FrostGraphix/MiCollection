@@ -61,6 +61,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteFeedback, setNoteFeedback] = useState<string | null>(null);
 
+  // Dispatch & Courier Tracking State
+  const [carrier, setCarrier] = useState<string>(order?.carrier || 'MiCollections Express (Abuja Local)');
+  const [trackingNumber, setTrackingNumber] = useState<string>(order?.trackingNumber || '');
+  const [riderName, setRiderName] = useState<string>(order?.riderName || '');
+  const [riderPhone, setRiderPhone] = useState<string>(order?.riderPhone || '');
+  const [dispatchNote, setDispatchNote] = useState<string>(order?.dispatchNote || '');
+  const [isSavingDispatch, setIsSavingDispatch] = useState(false);
+  const [dispatchFeedback, setDispatchFeedback] = useState<string | null>(null);
+
   // Sync state when order prop updates
   useEffect(() => {
     if (order) {
@@ -69,6 +78,12 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       setNoteDraft(order.note || '');
       setIsEditingNote(false);
       setPendingStatus(null);
+      setCarrier(order.carrier || 'MiCollections Express (Abuja Local)');
+      setTrackingNumber(order.trackingNumber || '');
+      setRiderName(order.riderName || '');
+      setRiderPhone(order.riderPhone || '');
+      setDispatchNote(order.dispatchNote || '');
+      setDispatchFeedback(null);
     }
   }, [order]);
 
@@ -151,13 +166,23 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     if (currentStatus === newStatus || isUpdating) return;
     setIsUpdating(true);
     try {
+      const payload: Record<string, any> = {
+        id: order.id,
+        orderStatus: newStatus,
+      };
+
+      if (newStatus === 'dispatched' || newStatus === 'shipped') {
+        payload.carrier = carrier;
+        payload.trackingNumber = trackingNumber;
+        payload.riderName = riderName;
+        payload.riderPhone = riderPhone;
+        payload.dispatchNote = dispatchNote;
+      }
+
       const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: order.id,
-          orderStatus: newStatus,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -173,6 +198,47 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     } finally {
       setIsUpdating(false);
       setPendingStatus(null);
+    }
+  };
+
+  // Save Dispatch & Courier Tracking Details
+  const handleSaveDispatch = async (setDispatched = false) => {
+    if (isSavingDispatch) return;
+    setIsSavingDispatch(true);
+    setDispatchFeedback(null);
+    const targetStatus = setDispatched ? 'dispatched' : currentStatus;
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: order.id,
+          orderStatus: targetStatus,
+          carrier,
+          trackingNumber,
+          riderName,
+          riderPhone,
+          dispatchNote,
+        }),
+      });
+
+      if (res.ok) {
+        if (setDispatched) {
+          setCurrentStatus('dispatched');
+          if (onStatusUpdate) {
+            onStatusUpdate(order.id, 'dispatched');
+          }
+        }
+        setDispatchFeedback('Dispatch & Tracking details saved to live order ✓');
+        setTimeout(() => setDispatchFeedback(null), 3500);
+      } else {
+        throw new Error('Failed to save dispatch details');
+      }
+    } catch (err: any) {
+      console.error('Failed to save dispatch details:', err);
+      setDispatchFeedback(err.message || 'Error saving dispatch details.');
+    } finally {
+      setIsSavingDispatch(false);
     }
   };
 
@@ -641,6 +707,150 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <span>Contact Customer ({order.phone})</span>
               <ExternalLink className="w-3.5 h-3.5 opacity-80" />
             </a>
+          </div>
+
+          {/* Courier & Live Dispatch Tracking Section */}
+          <div className="p-5 rounded-2xl bg-[var(--surface2)]/80 border border-[var(--line)] space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+                  <Truck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--ink)]">
+                    Courier & Live Dispatch Tracking
+                  </h4>
+                  <p className="text-[11px] text-[var(--mute)]">
+                    Configure carrier, waybill, and rider details. Instantly visible on customer tracking portal.
+                  </p>
+                </div>
+              </div>
+
+              {dispatchFeedback && (
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                  {dispatchFeedback}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider mb-1">
+                  Courier / Carrier
+                </label>
+                <select
+                  value={carrier}
+                  onChange={(e) => setCarrier(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-xs text-[var(--ink)] outline-none focus:border-brand"
+                >
+                  <option value="MiCollections Express (Abuja Local)">MiCollections Express (Abuja)</option>
+                  <option value="GIG Logistics (Nationwide)">GIG Logistics (Nationwide)</option>
+                  <option value="DHL Express (Priority)">DHL Express (Priority)</option>
+                  <option value="FedEx Nigeria">FedEx Nigeria</option>
+                  <option value="Speedaf Express">Speedaf Express</option>
+                  <option value="Peace Mass Transit Courier">Peace Mass Transit</option>
+                  <option value="Direct Dispatch Rider">Direct Dispatch Rider</option>
+                  <option value="Customer Storefront Pickup">Storefront Pickup</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider mb-1">
+                  Waybill / Tracking #
+                </label>
+                <input
+                  type="text"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="e.g. MC-EXP-9921 or GIG-8841"
+                  className="w-full h-10 px-3 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-xs text-[var(--ink)] outline-none focus:border-brand font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider mb-1">
+                  Rider Name
+                </label>
+                <input
+                  type="text"
+                  value={riderName}
+                  onChange={(e) => setRiderName(e.target.value)}
+                  placeholder="e.g. Musa Ibrahim"
+                  className="w-full h-10 px-3 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-xs text-[var(--ink)] outline-none focus:border-brand"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--mute)] uppercase tracking-wider mb-1">
+                  Rider Contact Phone
+                </label>
+                <input
+                  type="tel"
+                  value={riderPhone}
+                  onChange={(e) => setRiderPhone(e.target.value)}
+                  placeholder="e.g. 08012345678"
+                  className="w-full h-10 px-3 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-xs text-[var(--ink)] outline-none focus:border-brand font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveDispatch(false)}
+                  disabled={isSavingDispatch}
+                  className="px-3 py-2 rounded-xl bg-brand text-white text-xs font-semibold hover:bg-brand-deep transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {isSavingDispatch ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  )}
+                  Save Dispatch Info
+                </button>
+
+                {currentStatus !== 'dispatched' && currentStatus !== 'delivered' && (
+                  <button
+                    type="button"
+                    onClick={() => handleSaveDispatch(true)}
+                    disabled={isSavingDispatch}
+                    className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 shadow-sm"
+                  >
+                    <Truck className="w-3.5 h-3.5" /> Mark Dispatched & Save
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+                    const link = `${origin}/track/${order.id}?email=${encodeURIComponent(order.email)}`;
+                    handleCopy(link, 'track_link');
+                  }}
+                  className="px-3 py-2 rounded-xl bg-[var(--surface)] border border-[var(--line)] text-xs font-medium text-[var(--ink)] hover:border-brand flex items-center gap-1.5 transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5 text-brand" />
+                  {copiedField === 'track_link' ? 'Copied Tracking Link!' : 'Copy Tracking URL'}
+                </button>
+
+                <a
+                  href={`https://wa.me/${waPhone}?text=${encodeURIComponent(
+                    `Hello ${order.name}! Your MiCollections order #${order.id} has been dispatched with ${carrier}. Track your package live here: ${
+                      typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+                    }/track/${order.id}?email=${encodeURIComponent(order.email)}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                  title="Send Live Tracking Link to Customer on WhatsApp"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" /> Send Tracking via WhatsApp
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* 2-Column Grid: Customer Dossier & Financial Summary */}

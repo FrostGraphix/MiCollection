@@ -435,6 +435,48 @@ export default function AccountPage() {
                       </div>
                     </div>
 
+                    {/* Live Progress Tracker */}
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex items-center justify-between text-[11px] text-[var(--mute)]">
+                        <span className="font-medium">
+                          Status:{' '}
+                          <strong className="text-[var(--ink)] capitalize">
+                            {ord.orderStatus === 'dispatched' || ord.orderStatus === 'shipped'
+                              ? 'In Transit'
+                              : ord.orderStatus || 'Received'}
+                          </strong>
+                        </span>
+                        <span className="font-mono text-[10px]">
+                          {ord.orderStatus === 'delivered'
+                            ? '100%'
+                            : ord.orderStatus === 'dispatched' || ord.orderStatus === 'shipped'
+                            ? '75%'
+                            : ord.orderStatus === 'confirmed'
+                            ? '50%'
+                            : ord.orderStatus === 'cancelled'
+                            ? '0%'
+                            : '25%'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-[var(--surface2)] h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-brand h-full rounded-full transition-all duration-500"
+                          style={{
+                            width:
+                              ord.orderStatus === 'delivered'
+                                ? '100%'
+                                : ord.orderStatus === 'dispatched' || ord.orderStatus === 'shipped'
+                                ? '75%'
+                                : ord.orderStatus === 'confirmed'
+                                ? '50%'
+                                : ord.orderStatus === 'cancelled'
+                                ? '0%'
+                                : '25%',
+                          }}
+                        />
+                      </div>
+                    </div>
+
                     {/* Order Items */}
                     <div className="space-y-2.5">
                       {ord.items?.map((it, idx) => (
@@ -468,6 +510,15 @@ export default function AccountPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
+                        {/* Live In-App Track Order Button */}
+                        <Link
+                          href={`/track/${ord.id}`}
+                          className="btn-primary text-xs py-2 px-3.5 inline-flex items-center gap-1.5 font-semibold"
+                          title="View live milestone tracking"
+                        >
+                          <Truck className="w-3.5 h-3.5" /> Track Order
+                        </Link>
+
                         {/* WhatsApp Re-order Link */}
                         <a
                           href={waLink(reorderText)}
@@ -476,10 +527,10 @@ export default function AccountPage() {
                           className="btn-wa text-xs py-2 px-3.5 inline-flex items-center gap-1.5 font-semibold"
                           title="Re-order items from this order via WhatsApp"
                         >
-                          <RotateCcw className="w-3.5 h-3.5" /> Re-order on WhatsApp
+                          <RotateCcw className="w-3.5 h-3.5" /> Re-order
                         </a>
 
-                        {/* WhatsApp Tracking Link */}
+                        {/* WhatsApp Contact Link */}
                         <a
                           href={waLink(
                             ord.wa ||
@@ -487,10 +538,10 @@ export default function AccountPage() {
                           )}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn-ghost text-xs py-2 px-3 inline-flex items-center gap-1.5 text-[var(--ink2)] hover:text-brand"
-                          title="Track delivery status on WhatsApp"
+                          className="btn-ghost text-xs py-2 px-2.5 inline-flex items-center gap-1 text-[var(--ink2)] hover:text-brand"
+                          title="Contact support on WhatsApp"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-brand" /> Track
+                          <MessageSquare className="w-3.5 h-3.5 text-brand" /> WhatsApp
                         </a>
                       </div>
                     </div>

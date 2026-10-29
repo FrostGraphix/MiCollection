@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Check, MessageSquare, ArrowRight, Package } from 'lucide-react';
+import { Check, MessageSquare, ArrowRight, Package, Truck } from 'lucide-react';
 import { ConfettiEffect } from '@/components/ui/Confetti';
 import { OrderRecord } from '@/types';
 import { money, waLink } from '@/lib/utils';
@@ -105,6 +105,15 @@ function OrderSuccessContent() {
             >
               <MessageSquare className="w-4 h-4" /> Confirm Order on WhatsApp
             </a>
+
+            {orderId && (
+              <Link
+                href={`/track/${orderId}${order?.email ? `?email=${encodeURIComponent(order.email)}` : ''}`}
+                className="btn-primary text-sm py-3 px-6 shadow-xl inline-flex items-center gap-2"
+              >
+                <Truck className="w-4 h-4" /> Track Order in Real-Time
+              </Link>
+            )}
 
             <Link href="/shop" className="btn-ghost text-sm py-3 px-6">
               Keep Shopping <ArrowRight className="w-4 h-4" />

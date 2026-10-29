@@ -144,6 +144,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/shop', hasMega: true },
+    { label: 'Track Order', href: '/track' },
     { label: 'About', href: '/about' },
     { label: 'Delivery & FAQ', href: '/help' },
     { label: 'Contact', href: '/contact' },
