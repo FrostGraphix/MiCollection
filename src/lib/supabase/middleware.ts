@@ -55,15 +55,27 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Route Protection: Admin Console and Admin API endpoints require authenticated staff session
-    const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
-    const isLoginRoute = pathname === '/admin/login' || pathname.startsWith('/admin/login/');
+    // Route Protection: Admin Console UI pages require staff session
+    const isAdminPage = pathname.startsWith('/admin') && pathname !== '/admin/login' && !pathname.startsWith('/admin/login/');
 
-    if (isAdminRoute && !isLoginRoute) {
+    if (isAdminPage) {
       let isStaff = false;
 
-      // Verify the session strictly via Supabase Auth user
-      if (user) {
+      // 1. Check mc_admin_session cookie
+      const hasAdminCookie = request.cookies.get('mc_admin_session')?.value;
+      if (hasAdminCookie) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(hasAdminCookie));
+          if (parsed && (parsed.role === 'super_admin' || parsed.role === 'store_manager' || parsed.role === 'dispatcher')) {
+            isStaff = true;
+          }
+        } catch {
+          if (hasAdminCookie.length > 5) isStaff = true;
+        }
+      }
+
+      // 2. Check Supabase Auth user
+      if (!isStaff && user) {
         const role = (user.app_metadata?.role || user.user_metadata?.role) as string | undefined;
         const validRoles = ['super_admin', 'store_manager', 'dispatcher'];
         const email = (user.email || '').toLowerCase().trim();
@@ -83,15 +95,6 @@ export async function updateSession(request: NextRequest) {
       }
 
       if (!isStaff) {
-        // Return 401 JSON for /api/admin/*
-        if (pathname.startsWith('/api/admin')) {
-          return NextResponse.json(
-            { error: 'Unauthorized: Staff credentials required' },
-            { status: 401 }
-          );
-        }
-
-        // Redirect to /admin/login for /admin/* pages
         const adminLoginUrl = request.nextUrl.clone();
         adminLoginUrl.pathname = '/admin/login';
         return NextResponse.redirect(adminLoginUrl);

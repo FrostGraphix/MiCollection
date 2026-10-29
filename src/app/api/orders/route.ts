@@ -568,12 +568,33 @@ export async function PATCH(request: Request) {
         if (riderPhone !== undefined) updatePayload.rider_phone = riderPhone;
         if (dispatchNote !== undefined) updatePayload.dispatch_note = dispatchNote;
 
-        const { data: updatedData, error } = await supabase
+        let { data: updatedData, error } = await supabase
           .from('orders')
           .update(updatePayload)
           .eq('id', id)
           .select('*, order_items(*)')
           .maybeSingle();
+
+        // If optional columns do not exist in the database, fallback to standard core columns
+        if (error && (error.code === 'PGRST204' || error.message.includes('column') || error.message.includes('carrier') || error.message.includes('tracking_number'))) {
+          const corePayload: Record<string, any> = {};
+          if (orderStatus) corePayload.order_status = orderStatus;
+          if (paymentStatus) corePayload.payment_status = paymentStatus;
+          if (paymentMethod) corePayload.payment_method = paymentMethod;
+          if (payLabel) corePayload.pay_label = payLabel;
+          if (note !== undefined) corePayload.note = note;
+          if (paystackRef) corePayload.paystack_ref = paystackRef;
+
+          const retryRes = await supabase
+            .from('orders')
+            .update(corePayload)
+            .eq('id', id)
+            .select('*, order_items(*)')
+            .maybeSingle();
+
+          updatedData = retryRes.data;
+          error = retryRes.error;
+        }
 
         if (!error && updatedData) {
           const dbUpdated = mapDbOrderToRecord(updatedData);
