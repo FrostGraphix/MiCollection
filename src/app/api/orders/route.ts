@@ -13,6 +13,111 @@ export const dynamic = 'force-dynamic';
 const isValidUUID = (id: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
+async function resolveSessionUser(request: Request) {
+  // 1. Check mc_admin_session cookie (used by admin console & dashboard)
+  try {
+    const rawCookie = request.headers.get('cookie') || '';
+    const match = rawCookie.match(/(?:^|;\s*)mc_admin_session=([^;]+)/);
+    if (match && match[1]) {
+      try {
+        const decoded = decodeURIComponent(match[1]);
+        const parsed = JSON.parse(decoded);
+        const role = parsed?.role;
+        if (role && ['super_admin', 'store_manager', 'dispatcher'].includes(role)) {
+          return {
+            id: parsed.id || 'admin-user',
+            email: parsed.email || 'admin@micollections.com',
+            user_metadata: { role, full_name: parsed.name },
+            app_metadata: { role },
+          };
+        }
+      } catch {}
+    }
+  } catch (err) {
+    console.warn('Error reading mc_admin_session in orders route:', err);
+  }
+
+  // 2. If Supabase is not configured, grant sandbox staff access
+  if (!isSupabaseConfigured()) {
+    return {
+      id: 'sandbox-admin',
+      email: 'admin@micollections.com',
+      user_metadata: { role: 'super_admin', full_name: 'Mariam Siyaka' },
+      app_metadata: { role: 'super_admin' },
+    };
+  }
+
+  try {
+    // 3. Try server cookie session via SSR client
+    const serverClient = createClient();
+    const {
+      data: { user: cookieUser },
+    } = await serverClient.auth.getUser();
+
+    if (cookieUser) return cookieUser;
+
+    // 4. Try Authorization Bearer token header
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7).trim();
+      const adminClient = createAdminClient();
+      const {
+        data: { user: tokenUser },
+        error,
+      } = await adminClient.auth.getUser(token);
+
+      if (!error && tokenUser) return tokenUser;
+    }
+  } catch (err) {
+    console.warn('Error resolving session in orders route:', err);
+  }
+
+  return null;
+}
+
+function isStaffUser(user: any): boolean {
+  if (!user) return false;
+  const role = user.app_metadata?.role || user.user_metadata?.role;
+  if (role && ['super_admin', 'store_manager', 'dispatcher'].includes(role)) {
+    return true;
+  }
+  const email = (user.email || '').toLowerCase().trim();
+  if (
+    email === 'admin@micollections.com' ||
+    email === 'manager@micollections.com' ||
+    email === 'dispatch@micollections.com' ||
+    email.endsWith('@micollections.com')
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isInternalOrSigned(request: Request): boolean {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const internalSecret = process.env.INTERNAL_API_SECRET;
+  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+  const internalHeader = request.headers.get('x-internal-secret') || request.headers.get('x-service-key');
+
+  if (serviceRoleKey) {
+    if (authHeader && (authHeader === `Bearer ${serviceRoleKey}` || authHeader === serviceRoleKey)) {
+      return true;
+    }
+    if (internalHeader && internalHeader === serviceRoleKey) {
+      return true;
+    }
+  }
+  if (internalSecret) {
+    if (internalHeader && internalHeader === internalSecret) {
+      return true;
+    }
+    if (authHeader && (authHeader === `Bearer ${internalSecret}` || authHeader === internalSecret)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 
 function mapDbOrderToRecord(ord: any): OrderRecord {
   const items: OrderItemRecord[] = (ord.order_items || []).map((it: any) => {
@@ -250,8 +355,13 @@ export async function GET(request: Request) {
   const userId = searchParams.get('userId');
   const email = searchParams.get('email');
 
+  const sessionUser = await resolveSessionUser(request);
+  const isStaff = isStaffUser(sessionUser);
+
   // Case 1: Fetch single order by ID
   if (id) {
+    let order: OrderRecord | null = null;
+
     if (isSupabaseConfigured()) {
       try {
         const supabase = createAdminClient();
@@ -262,28 +372,64 @@ export async function GET(request: Request) {
           .maybeSingle();
 
         if (!error && orderData) {
-          const mappedOrder = mapDbOrderToRecord(orderData);
-          localOrdersCache[mappedOrder.id] = mappedOrder;
-          return NextResponse.json({ order: mappedOrder });
-        }
-        if (!error && !orderData) {
-          return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+          order = mapDbOrderToRecord(orderData);
+          localOrdersCache[order.id] = order;
         }
       } catch (e) {
         console.warn('Supabase fetch order error:', e);
       }
     }
 
-    const cached = localOrdersCache[id];
-    if (cached) {
-      return NextResponse.json({ order: cached });
+    if (!order && localOrdersCache[id]) {
+      order = localOrdersCache[id];
     }
 
-    return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    // Single order security check:
+    // If order is bound to a registered user_id, ensure session matches owner or staff
+    if (order.userId && !isStaff) {
+      const isOwner =
+        (sessionUser && sessionUser.id === order.userId) ||
+        (sessionUser?.email && sessionUser.email.toLowerCase() === order.email?.toLowerCase());
+
+      if (sessionUser && !isOwner) {
+        return NextResponse.json(
+          { error: 'Forbidden: Insufficient permissions to view this order' },
+          { status: 403 }
+        );
+      }
+    }
+
+    return NextResponse.json({ order });
   }
 
   // Case 2: Fetch orders for a specific user ID or email
   if (userId || email) {
+    // If not staff, enforce that requesting session matches the requested userId or email
+    if (!isStaff) {
+      if (!sessionUser) {
+        return NextResponse.json(
+          { error: 'Unauthorized: Authentication required to access user orders' },
+          { status: 401 }
+        );
+      }
+
+      const matchesUserId = userId ? sessionUser.id === userId : false;
+      const matchesEmail = email
+        ? sessionUser.email?.toLowerCase().trim() === email.toLowerCase().trim()
+        : false;
+
+      if (!matchesUserId && !matchesEmail) {
+        return NextResponse.json(
+          { error: 'Forbidden: You can only access your own orders' },
+          { status: 403 }
+        );
+      }
+    }
+
     if (isSupabaseConfigured()) {
       try {
         const supabase = createAdminClient();
@@ -321,7 +467,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ orders: userOrdersList });
   }
 
-  // Case 3: No params, return latest orders
+  // Case 3: No params, all-orders query - STRICT STAFF ONLY
+  if (!sessionUser) {
+    return NextResponse.json(
+      { error: 'Unauthorized: Staff credentials required to view all orders' },
+      { status: 401 }
+    );
+  }
+
+  if (!isStaff) {
+    return NextResponse.json(
+      { error: 'Forbidden: Staff privileges required' },
+      { status: 403 }
+    );
+  }
+
   if (isSupabaseConfigured()) {
     try {
       const supabase = createAdminClient();
@@ -351,6 +511,17 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const sessionUser = await resolveSessionUser(request);
+    const isStaff = isStaffUser(sessionUser);
+    const isInternal = isInternalOrSigned(request);
+
+    if (!isStaff && !isInternal) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Staff credentials or signed authorization required' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const id = body.id;
     const orderStatus = (body.orderStatus || body.order_status) as OrderStatus | undefined;
@@ -391,6 +562,11 @@ export async function PATCH(request: Request) {
         if (payLabel) updatePayload.pay_label = payLabel;
         if (note !== undefined) updatePayload.note = note;
         if (paystackRef) updatePayload.paystack_ref = paystackRef;
+        if (carrier !== undefined) updatePayload.carrier = carrier;
+        if (trackingNumber !== undefined) updatePayload.tracking_number = trackingNumber;
+        if (riderName !== undefined) updatePayload.rider_name = riderName;
+        if (riderPhone !== undefined) updatePayload.rider_phone = riderPhone;
+        if (dispatchNote !== undefined) updatePayload.dispatch_note = dispatchNote;
 
         const { data: updatedData, error } = await supabase
           .from('orders')
@@ -421,6 +597,11 @@ export async function PATCH(request: Request) {
       if (paymentMethod) order.paymentMethod = paymentMethod;
       if (payLabel) order.payLabel = payLabel;
       if (note !== undefined) order.note = note;
+      if (carrier !== undefined) order.carrier = carrier;
+      if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;
+      if (riderName !== undefined) order.riderName = riderName;
+      if (riderPhone !== undefined) order.riderPhone = riderPhone;
+      if (dispatchNote !== undefined) order.dispatchNote = dispatchNote;
       localOrdersCache[id] = order;
       return NextResponse.json({ success: true, order });
     }

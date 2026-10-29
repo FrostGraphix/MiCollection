@@ -198,7 +198,7 @@ export interface CustomerProfile {
   landmark?: string;
   totalOrders: number;
   lifetimeValue: number; // LTV in ₦
-  lastOrderDate: string;
+  lastOrderDate: string | null;
   tier: CustomerVIPTier;
   orders?: OrderRecord[];
 }

@@ -46,22 +46,26 @@ function OrderSuccessContent() {
     {
       title: 'Confirm on WhatsApp',
       desc: 'Send us the order message so we can verify sizes and total.',
-      done: false,
+      done: Boolean(
+        order?.orderStatus === 'confirmed' ||
+          order?.orderStatus === 'shipped' ||
+          order?.orderStatus === 'delivered'
+      ),
     },
     {
       title: 'Payment Confirmed',
       desc: `Pay by ${order?.payLabel || 'selected method'}. We verify right away.`,
-      done: false,
+      done: Boolean(order?.paymentStatus === 'paid'),
     },
     {
       title: 'Packed & Dispatched',
       desc: 'Carefully packaged in Abuja and handed to rider or courier.',
-      done: false,
+      done: Boolean(order?.orderStatus === 'shipped' || order?.orderStatus === 'delivered'),
     },
     {
       title: 'Delivered to You',
       desc: `Arrives in ${order?.eta || '1 to 2 working days'}.`,
-      done: false,
+      done: Boolean(order?.orderStatus === 'delivered'),
     },
   ];
 

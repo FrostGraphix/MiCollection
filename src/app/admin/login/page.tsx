@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
     const cred = ADMIN_PRESETS[role];
     if (cred) {
       setEmail(cred.email);
-      setPassword(cred.password);
+      setPassword('');
       setActiveRolePreset(role);
       setErrorMsg('');
     }

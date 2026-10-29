@@ -3,8 +3,79 @@ import { PRODUCTS, CATS } from '@/lib/products';
 import { Product } from '@/types';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
+
+async function verifyStaffAuth(request: Request): Promise<boolean> {
+  // 1. Check mc_admin_session cookie (client-side admin session)
+  const cookieHeader = request.headers.get('cookie') || '';
+  const match = cookieHeader.match(/(?:^|;\s*)mc_admin_session=([^;]*)/);
+  if (match) {
+    try {
+      const session = JSON.parse(decodeURIComponent(match[1]));
+      if (session && (session.role === 'super_admin' || session.role === 'store_manager')) {
+        return true;
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
+
+  // 2. Check Supabase Auth (server session cookies or Bearer token)
+  if (isSupabaseConfigured()) {
+    try {
+      const serverClient = createServerClient();
+      const {
+        data: { user: cookieUser },
+      } = await serverClient.auth.getUser();
+
+      if (cookieUser) {
+        const role = cookieUser.app_metadata?.role || cookieUser.user_metadata?.role;
+        const email = (cookieUser.email || '').toLowerCase();
+        if (
+          role === 'super_admin' ||
+          role === 'store_manager' ||
+          email.includes('admin@micollections.com') ||
+          email.includes('manager@micollections.com')
+        ) {
+          return true;
+        }
+      }
+    } catch (err) {
+      // server cookie error
+    }
+
+    try {
+      const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.slice(7).trim();
+        const adminClient = createAdminClient();
+        const {
+          data: { user: tokenUser },
+          error,
+        } = await adminClient.auth.getUser(token);
+
+        if (!error && tokenUser) {
+          const role = tokenUser.app_metadata?.role || tokenUser.user_metadata?.role;
+          const email = (tokenUser.email || '').toLowerCase();
+          if (
+            role === 'super_admin' ||
+            role === 'store_manager' ||
+            email.includes('admin@micollections.com') ||
+            email.includes('manager@micollections.com')
+          ) {
+            return true;
+          }
+        }
+      }
+    } catch (err) {
+      // bearer token error
+    }
+  }
+
+  return false;
+}
 
 // Global cache to maintain product state across requests in the server instance
 const getProductsStore = (): Product[] => {
@@ -127,7 +198,7 @@ export async function GET(request: Request) {
 
           const { data, error } = await query.order('id', { ascending: false });
 
-          if (!error && data && data.length > 0) {
+          if (!error && data) {
             let mapped = data.map(mapSupabaseProduct);
 
             // Apply stock filters in JS if requested
@@ -243,6 +314,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const isAuthorized = await verifyStaffAuth(request);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Staff authentication required (super_admin or store_manager)' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     if (!body.name || body.price === undefined) {
@@ -327,6 +406,14 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const isAuthorized = await verifyStaffAuth(request);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Staff authentication required (super_admin or store_manager)' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const id = Number(body.id);
 
@@ -418,6 +505,14 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const isAuthorized = await verifyStaffAuth(request);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Staff authentication required (super_admin or store_manager)' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     let id = searchParams.get('id');
 

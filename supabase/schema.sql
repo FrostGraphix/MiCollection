@@ -67,8 +67,20 @@ create table if not exists public.orders (
   total numeric not null,
   paystack_ref text,
   note text,
+  carrier text,
+  tracking_number text,
+  rider_name text,
+  rider_phone text,
+  dispatch_note text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Ensure explicit courier & dispatch columns exist if table was already created
+alter table public.orders add column if not exists carrier text;
+alter table public.orders add column if not exists tracking_number text;
+alter table public.orders add column if not exists rider_name text;
+alter table public.orders add column if not exists rider_phone text;
+alter table public.orders add column if not exists dispatch_note text;
 
 -- 5. Order Items Table
 create table if not exists public.order_items (
@@ -112,7 +124,7 @@ create policy "Anyone can insert orders" on public.orders
   for insert with check (true);
 
 create policy "Users can view own orders" on public.orders
-  for select using (auth.uid() = user_id or user_id is null);
+  for select using (auth.uid() = user_id);
 
 -- Order Items: Anyone can insert, users can view
 create policy "Anyone can insert order items" on public.order_items
@@ -123,7 +135,7 @@ create policy "Users can view order items" on public.order_items
     exists (
       select 1 from public.orders
       where public.orders.id = public.order_items.order_id
-      and (public.orders.user_id = auth.uid() or public.orders.user_id is null)
+      and public.orders.user_id = auth.uid()
     )
   );
 

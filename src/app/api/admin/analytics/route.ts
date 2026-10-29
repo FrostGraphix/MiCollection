@@ -2,19 +2,41 @@ import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PRODUCTS, CATS } from '@/lib/products';
+import { verifyStaffAuth } from '@/lib/adminAuthServer';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+function calcPctChange(current: number, previous: number): { change: string; isPositive: boolean } {
+  if (previous === 0) {
+    if (current === 0) return { change: '0.0%', isPositive: true };
+    return { change: '+100.0%', isPositive: true };
+  }
+  const pct = ((current - previous) / previous) * 100;
+  const isPositive = pct >= 0;
+  const prefix = pct > 0 ? '+' : '';
+  return {
+    change: `${prefix}${pct.toFixed(1)}%`,
+    isPositive,
+  };
+}
+
+export async function GET(request: Request) {
   try {
-    // Default executive metrics for MiCollections fallback
-    let grossRevenue = 8450000;
-    let netRevenue = 8120000;
-    let totalOrders = 248;
-    let aov = Math.round(grossRevenue / totalOrders);
-    let pendingDispatches = 4;
-    let todayOrdersCount = 14;
-    let fulfillmentRate = 98.4;
+    // 0. Staff Authentication Check
+    if (!(await verifyStaffAuth(request))) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Staff access required' },
+        { status: 401 }
+      );
+    }
+
+    let grossRevenue = 0;
+    let netRevenue = 0;
+    let totalOrders = 0;
+    let aov = 0;
+    let pendingDispatches = 0;
+    let todayOrdersCount = 0;
+    let fulfillmentRate = 0;
 
     let revenueGrowth: { date: string; revenue: number; orders: number }[] = [];
     let categoryBreakdown: { name: string; share: number; revenue: number; count: number; color: string }[] = [];
@@ -22,6 +44,11 @@ export async function GET() {
     let conversionFunnel: { stage: string; count: number; conversionRate: string; dropOff: string; note: string }[] = [];
 
     let isLiveFromSupabase = false;
+
+    let revenueChange = { change: '0.0%', isPositive: true };
+    let ordersChange = { change: '0.0%', isPositive: true };
+    let aovChange = { change: '0.0%', isPositive: true };
+    let fulfillmentChange = { change: '0.0%', isPositive: true };
 
     // Check if live Supabase orders and items exist to aggregate real values
     if (isSupabaseConfigured()) {
@@ -41,8 +68,12 @@ export async function GET() {
           isLiveFromSupabase = true;
           totalOrders = dbOrders.length;
           grossRevenue = dbOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-          netRevenue = Math.round(grossRevenue * 0.96); // after payment gateway fees & logistics
-          aov = Math.round(grossRevenue / totalOrders);
+
+          // Calculate genuine Net Revenue: sum(total) - sum(fee)
+          const totalFees = dbOrders.reduce((sum, o) => sum + (Number(o.fee) || 0), 0);
+          netRevenue = Math.max(0, grossRevenue - totalFees);
+
+          aov = totalOrders > 0 ? Math.round(grossRevenue / totalOrders) : 0;
 
           // Pending dispatches
           pendingDispatches = dbOrders.filter(
@@ -50,9 +81,8 @@ export async function GET() {
           ).length;
 
           // Delivered / Fulfilled
-          const deliveredCount = dbOrders.filter((o) => o.order_status === 'delivered').length;
-          const confirmedOrDelivered = dbOrders.filter(
-            (o) => o.order_status === 'delivered' || o.order_status === 'shipped' || o.order_status === 'confirmed'
+          const confirmedOrDelivered = dbOrders.filter((o) =>
+            ['delivered', 'shipped', 'confirmed'].includes((o.order_status || '').toLowerCase())
           ).length;
           fulfillmentRate = Number(((confirmedOrDelivered / totalOrders) * 100).toFixed(1));
 
@@ -61,7 +91,49 @@ export async function GET() {
           startOfToday.setHours(0, 0, 0, 0);
           todayOrdersCount = dbOrders.filter((o) => new Date(o.created_at) >= startOfToday).length;
 
-          // 2. Real State Distribution
+          // 2. Genuine percentage changes: last 30 days vs preceding 30 days
+          const now = new Date();
+          const MS_DAY = 86400000;
+          const thirtyDaysAgo = new Date(now.getTime() - 30 * MS_DAY);
+          const sixtyDaysAgo = new Date(now.getTime() - 60 * MS_DAY);
+
+          const current30Orders = dbOrders.filter((o) => {
+            const d = new Date(o.created_at);
+            return d >= thirtyDaysAgo && d <= now;
+          });
+
+          const previous30Orders = dbOrders.filter((o) => {
+            const d = new Date(o.created_at);
+            return d >= sixtyDaysAgo && d < thirtyDaysAgo;
+          });
+
+          const currentGross = current30Orders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+          const prevGross = previous30Orders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+          revenueChange = calcPctChange(currentGross, prevGross);
+
+          const currentOrdersCount = current30Orders.length;
+          const prevOrdersCount = previous30Orders.length;
+          ordersChange = calcPctChange(currentOrdersCount, prevOrdersCount);
+
+          const currentAov = currentOrdersCount > 0 ? Math.round(currentGross / currentOrdersCount) : 0;
+          const prevAov = prevOrdersCount > 0 ? Math.round(prevGross / prevOrdersCount) : 0;
+          aovChange = calcPctChange(currentAov, prevAov);
+
+          const currentFulfilled = current30Orders.filter((o) =>
+            ['confirmed', 'shipped', 'delivered'].includes((o.order_status || '').toLowerCase())
+          ).length;
+          const prevFulfilled = previous30Orders.filter((o) =>
+            ['confirmed', 'shipped', 'delivered'].includes((o.order_status || '').toLowerCase())
+          ).length;
+
+          const currentFulfillRate = currentOrdersCount > 0 ? (currentFulfilled / currentOrdersCount) * 100 : 0;
+          const prevFulfillRate = prevOrdersCount > 0 ? (prevFulfilled / prevOrdersCount) * 100 : 0;
+          const fulfillDiff = currentFulfillRate - prevFulfillRate;
+          fulfillmentChange = prevOrdersCount === 0
+            ? { change: '0.0%', isPositive: true }
+            : { change: `${fulfillDiff >= 0 ? '+' : ''}${fulfillDiff.toFixed(1)}%`, isPositive: fulfillDiff >= 0 };
+
+          // 3. Real State Distribution
           const stateCounts: Record<string, number> = {};
           dbOrders.forEach((o) => {
             const st = o.state || 'Abuja (FCT)';
@@ -97,7 +169,7 @@ export async function GET() {
             });
           }
 
-          // 3. Real Category Breakdown from line items
+          // 4. Real Category Breakdown from line items
           const catRevenueMap: Record<string, { revenue: number; count: number }> = {};
           const catColors: Record<string, string> = {
             wears: '#7c3aed',
@@ -146,7 +218,7 @@ export async function GET() {
             };
           }).sort((a, b) => b.revenue - a.revenue);
 
-          // 4. Real Daily Revenue Trajectory
+          // 5. Real Daily Revenue Trajectory from actual order dates
           const dateMap: Record<string, { revenue: number; orders: number; timestamp: number }> = {};
           dbOrders.forEach((o) => {
             const d = new Date(o.created_at);
@@ -175,60 +247,84 @@ export async function GET() {
             .sort((a, b) => a.timestamp - b.timestamp)
             .map(({ date, revenue, orders }) => ({ date, revenue, orders }))
             .slice(-30);
+
+          // 6. Real conversion funnel based on actual order statuses from Supabase:
+          // Stage 1: Orders Placed (totalOrders)
+          // Stage 2: Confirmed & Paid (confirmed + shipped + delivered)
+          // Stage 3: In Transit / Dispatched (shipped + delivered)
+          // Stage 4: Delivered (delivered)
+          const confirmedAndPaidCount = dbOrders.filter((o) =>
+            ['confirmed', 'shipped', 'delivered'].includes((o.order_status || '').toLowerCase())
+          ).length;
+
+          const inTransitDispatchedCount = dbOrders.filter((o) =>
+            ['shipped', 'delivered'].includes((o.order_status || '').toLowerCase())
+          ).length;
+
+          const deliveredCount = dbOrders.filter((o) =>
+            (o.order_status || '').toLowerCase() === 'delivered'
+          ).length;
+
+          const computeStageMetrics = (stageName: string, count: number, note: string) => {
+            if (totalOrders === 0) {
+              return {
+                stage: stageName,
+                count: 0,
+                conversionRate: '0.0%',
+                dropOff: '0.0%',
+                note,
+              };
+            }
+            const rate = (count / totalOrders) * 100;
+            const drop = 100 - rate;
+            return {
+              stage: stageName,
+              count,
+              conversionRate: `${rate.toFixed(1)}%`,
+              dropOff: drop > 0 ? `-${drop.toFixed(1)}%` : '0.0%',
+              note,
+            };
+          };
+
+          conversionFunnel = [
+            {
+              stage: 'Orders Placed',
+              count: totalOrders,
+              conversionRate: '100%',
+              dropOff: '0%',
+              note: 'Total customer orders created in database',
+            },
+            computeStageMetrics(
+              'Confirmed & Paid',
+              confirmedAndPaidCount,
+              'Payment verified & order accepted'
+            ),
+            computeStageMetrics(
+              'In Transit / Dispatched',
+              inTransitDispatchedCount,
+              'Handed over to delivery courier'
+            ),
+            computeStageMetrics(
+              'Delivered',
+              deliveredCount,
+              'Successfully completed deliveries'
+            ),
+          ];
         }
       } catch (err) {
         console.warn('Could not query Supabase analytics:', err);
       }
     }
 
-    // Fallbacks if data is sparse or pending
-    if (revenueGrowth.length < 5) {
-      revenueGrowth = [
-        { date: 'Oct 20', revenue: 165000, orders: 4 },
-        { date: 'Oct 21', revenue: 195000, orders: 5 },
-        { date: 'Oct 22', revenue: 240000, orders: 6 },
-        { date: 'Oct 23', revenue: 310000, orders: 7 },
-        { date: 'Oct 24', revenue: 380000, orders: 8 },
-        { date: 'Oct 25', revenue: 420000, orders: 9 },
-        { date: 'Oct 26', revenue: 460000, orders: 10 },
-        { date: 'Oct 27', revenue: 495000, orders: 12 },
-        { date: 'Oct 28', revenue: Math.max(250000, Math.round(grossRevenue * 0.15)), orders: Math.max(5, todayOrdersCount) },
+    // Default funnel structure if no orders exist yet
+    if (conversionFunnel.length === 0) {
+      conversionFunnel = [
+        { stage: 'Orders Placed', count: 0, conversionRate: '100%', dropOff: '0%', note: 'Total customer orders created in database' },
+        { stage: 'Confirmed & Paid', count: 0, conversionRate: '0.0%', dropOff: '0.0%', note: 'Payment verified & order accepted' },
+        { stage: 'In Transit / Dispatched', count: 0, conversionRate: '0.0%', dropOff: '0.0%', note: 'Handed over to delivery courier' },
+        { stage: 'Delivered', count: 0, conversionRate: '0.0%', dropOff: '0.0%', note: 'Successfully completed deliveries' },
       ];
     }
-
-    if (categoryBreakdown.length === 0) {
-      categoryBreakdown = [
-        { name: "Women's Fashion / Abayas", share: 38, revenue: Math.round(grossRevenue * 0.38), count: 24, color: '#7c3aed' },
-        { name: 'Unisex Streetwear', share: 24, revenue: Math.round(grossRevenue * 0.24), count: 18, color: '#c026d3' },
-        { name: 'Jewellery & Watches', share: 16, revenue: Math.round(grossRevenue * 0.16), count: 12, color: '#06b6d4' },
-        { name: 'Kitchen & Home', share: 12, revenue: Math.round(grossRevenue * 0.12), count: 9, color: '#f59e0b' },
-        { name: 'Smart Gadgets', share: 10, revenue: Math.round(grossRevenue * 0.10), count: 7, color: '#10b981' },
-      ];
-    }
-
-    if (stateDistribution.length === 0) {
-      stateDistribution = [
-        { state: 'Abuja (FCT)', share: 58, orders: Math.round(totalOrders * 0.58), deliveryMode: 'Same-Day Doorstep' },
-        { state: 'Lagos', share: 24, orders: Math.round(totalOrders * 0.24), deliveryMode: 'Interstate Courier (48h)' },
-        { state: 'Port Harcourt', share: 9, orders: Math.round(totalOrders * 0.09), deliveryMode: 'Interstate Courier (72h)' },
-        { state: 'Kano', share: 5, orders: Math.round(totalOrders * 0.05), deliveryMode: 'Interstate Courier (72h)' },
-        { state: 'Other States', share: 4, orders: Math.round(totalOrders * 0.04), deliveryMode: 'Nationwide Logistics' },
-      ];
-    }
-
-    // Real conversion funnel computed relative to live orders
-    const estimatedStoreVisitors = Math.max(1250, totalOrders * 65);
-    const estimatedProductViews = Math.round(estimatedStoreVisitors * 0.68);
-    const estimatedAddToCart = Math.round(totalOrders * 3.8);
-    const estimatedCheckout = Math.round(totalOrders * 1.6);
-
-    conversionFunnel = [
-      { stage: 'Store Visitors', count: estimatedStoreVisitors, conversionRate: '100%', dropOff: '0%', note: 'Online store sessions' },
-      { stage: 'Product Views', count: estimatedProductViews, conversionRate: '68.0%', dropOff: '-32.0%', note: 'Engaged PDP browsers' },
-      { stage: 'Add to Cart', count: estimatedAddToCart, conversionRate: '24.5%', dropOff: '-75.5%', note: 'Items added to bag' },
-      { stage: 'Checkout Started', count: estimatedCheckout, conversionRate: '35.2%', dropOff: '-64.8%', note: 'Delivery info provided' },
-      { stage: 'Paid / WhatsApp Confirmed', count: totalOrders, conversionRate: `${((totalOrders / estimatedCheckout) * 100).toFixed(1)}%`, dropOff: `-${(100 - (totalOrders / estimatedCheckout) * 100).toFixed(1)}%`, note: 'Live database orders' },
-    ];
 
     return NextResponse.json({
       success: true,
@@ -238,29 +334,29 @@ export async function GET() {
         grossRevenue: {
           value: grossRevenue,
           formatted: '₦' + Math.round(grossRevenue).toLocaleString('en-NG'),
-          change: '+18.4%',
-          isPositive: true,
+          change: revenueChange.change,
+          isPositive: revenueChange.isPositive,
           subtitle: 'from live database orders',
         },
         totalOrders: {
           value: totalOrders,
           formatted: totalOrders.toString(),
-          change: '+12.5%',
-          isPositive: true,
+          change: ordersChange.change,
+          isPositive: ordersChange.isPositive,
           subtitle: `${pendingDispatches} pending dispatch`,
         },
         averageOrderValue: {
           value: aov,
           formatted: '₦' + Math.round(aov).toLocaleString('en-NG'),
-          change: '+5.2%',
-          isPositive: true,
-          subtitle: 'cart depth 2.4 items',
+          change: aovChange.change,
+          isPositive: aovChange.isPositive,
+          subtitle: 'average order value',
         },
         fulfillmentRate: {
           value: `${fulfillmentRate}%`,
           formatted: `${fulfillmentRate}%`,
-          change: '+1.1%',
-          isPositive: true,
+          change: fulfillmentChange.change,
+          isPositive: fulfillmentChange.isPositive,
           subtitle: 'Abuja & nationwide delivery',
         },
         netRevenue,

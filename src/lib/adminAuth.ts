@@ -20,7 +20,7 @@ export interface AdminUser {
 
 export interface AdminPreset {
   email: string;
-  password: string;
+  password?: string;
   role: AdminRole;
   name: string;
   roleTitle: string;

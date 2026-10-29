@@ -50,109 +50,6 @@ export interface AdminOrder {
   createdAt: string;
 }
 
-// Initial realistic Nigerian orders
-export const INITIAL_ORDERS: AdminOrder[] = [
-  {
-    id: 'MC-9842',
-    name: 'Amina Bello-Kano',
-    phone: '0803 456 7891',
-    email: 'amina.bello@gmail.com',
-    address: 'Plot 412, Mississippi Street, Maitama',
-    state: 'Abuja (FCT)',
-    landmark: 'Near Farmers Market',
-    amount: 145000,
-    paymentMethod: 'transfer',
-    paymentStatus: 'paid',
-    orderStatus: 'dispatched',
-    deliveryLabel: 'Same-Day Abuja Courier',
-    eta: 'Today by 4:00 PM',
-    items: [
-      { name: 'Royal Silk Abaya with Pearl Beadwork', price: 85000, qty: 1, color: 'black', opt: 'L' },
-      { name: 'Chunky Sole Streetwear Sneaker', price: 60000, qty: 1, color: 'ivory', opt: 'Size 40' },
-    ],
-    createdAt: '3 mins ago',
-  },
-  {
-    id: 'MC-9841',
-    name: 'Olumide Adeleke',
-    phone: '0812 889 0123',
-    email: 'olumide.adeleke@yahoo.com',
-    address: '14 Admiralty Way, Lekki Phase 1',
-    state: 'Lagos',
-    landmark: 'Opposite Ebeano Supermarket',
-    amount: 72000,
-    paymentMethod: 'link',
-    paymentStatus: 'paid',
-    orderStatus: 'confirmed',
-    deliveryLabel: 'Interstate Courier (Express)',
-    eta: 'Tomorrow by 2:00 PM',
-    items: [
-      { name: 'Heavyweight Oversized Unisex Hoodie', price: 42000, qty: 1, color: 'violet', opt: 'XL' },
-      { name: 'Titanium Link Chain Necklace', price: 30000, qty: 1, color: 'gold', opt: 'One Size' },
-    ],
-    createdAt: '12 mins ago',
-  },
-  {
-    id: 'MC-9840',
-    name: 'Zainab Mohammed',
-    phone: '0809 332 1144',
-    email: 'zainab.m@gmail.com',
-    address: 'House 8, 3rd Avenue, Gwarinpa Estate',
-    state: 'Abuja (FCT)',
-    landmark: 'First Gate',
-    amount: 38500,
-    paymentMethod: 'pod',
-    paymentStatus: 'pending',
-    orderStatus: 'received',
-    deliveryLabel: 'Abuja Doorstep Bike Delivery',
-    eta: 'Today by 6:00 PM',
-    items: [
-      { name: 'Smart Touch Sensor Water Bottle', price: 18500, qty: 1, color: 'black', opt: '500ml' },
-      { name: 'Cast Iron Non-Stick Crepe Pan', price: 20000, qty: 1, color: 'plum', opt: 'Standard' },
-    ],
-    createdAt: '28 mins ago',
-  },
-  {
-    id: 'MC-9839',
-    name: 'Chinedu Eze',
-    phone: '0901 776 5432',
-    email: 'chinedu.eze@outlook.com',
-    address: '22 Tombia Street, GRA Phase 2',
-    state: 'Port Harcourt',
-    landmark: 'Adjacent Hotel Presidential',
-    amount: 110000,
-    paymentMethod: 'transfer',
-    paymentStatus: 'paid',
-    orderStatus: 'delivered',
-    deliveryLabel: 'Interstate Courier',
-    eta: 'Delivered',
-    items: [
-      { name: 'Mi Ultra OLED Smartwatch Pro', price: 75000, qty: 1, color: 'silver', opt: '45mm' },
-      { name: 'Leather Crossbody Messenger Bag', price: 35000, qty: 1, color: 'black', opt: 'Classic' },
-    ],
-    createdAt: '1 hour ago',
-  },
-  {
-    id: 'MC-9838',
-    name: 'Fatima Aliyu',
-    phone: '0706 991 2233',
-    email: 'fatima.aliyu@knt.edu.ng',
-    address: 'Bompai Road, Nassarawa GRA',
-    state: 'Kano',
-    landmark: 'Near Central Bank',
-    amount: 48000,
-    paymentMethod: 'link',
-    paymentStatus: 'paid',
-    orderStatus: 'dispatched',
-    deliveryLabel: 'Interstate Courier',
-    eta: 'In Transit',
-    items: [
-      { name: 'Pleated Chiffon Dubai Kaftan', price: 48000, qty: 1, color: 'orchid', opt: 'Free Size' },
-    ],
-    createdAt: '2 hours ago',
-  },
-];
-
 // Helper to play a Web Audio API luxury chime
 export function playOrderAlertChime() {
   if (typeof window === 'undefined') return;
@@ -191,10 +88,11 @@ export interface RecentOrdersTickerProps {
 }
 
 export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
-  initialOrders = INITIAL_ORDERS,
+  initialOrders = [],
   title = 'Live Order Stream',
 }) => {
   const [orders, setOrders] = useState<AdminOrder[]>(initialOrders);
+  const [isLoading, setIsLoading] = useState(initialOrders.length === 0);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [filter, setFilter] = useState<'all' | 'abuja' | 'interstate' | 'high-value'>('all');
@@ -205,10 +103,11 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
   useEffect(() => {
     async function loadLiveOrders() {
       try {
+        setIsLoading(true);
         const res = await fetch('/api/orders');
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data.orders) && data.orders.length > 0) {
+          if (Array.isArray(data.orders)) {
             const mapped: AdminOrder[] = data.orders.map((o: any) => ({
               id: o.id,
               name: o.name,
@@ -237,6 +136,8 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
         }
       } catch (err) {
         console.warn('Failed to load live orders for ticker:', err);
+      } finally {
+        setIsLoading(false);
       }
     }
     loadLiveOrders();
@@ -440,7 +341,35 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
 
       {/* Orders List */}
       <div className="flex flex-col gap-2.5 max-h-[460px] overflow-y-auto pr-1">
-        {filteredOrders.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col gap-2.5 py-1">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between p-3.5 rounded-2xl border border-[var(--line)] bg-[var(--surface2)]/40 animate-pulse"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-[var(--line)]/50 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-3 bg-[var(--line)]/60 rounded" />
+                      <div className="w-24 h-3 bg-[var(--line)]/40 rounded" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 h-2.5 bg-[var(--line)]/30 rounded" />
+                      <div className="w-12 h-2.5 bg-[var(--line)]/30 rounded" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="w-16 h-5 rounded-full bg-[var(--line)]/40 hidden sm:block" />
+                  <div className="w-16 h-5 rounded-full bg-[var(--line)]/40" />
+                  <div className="w-16 h-4 bg-[var(--line)]/50 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div className="py-12 text-center text-xs text-[var(--mute)]">
             No orders match the selected filter.
           </div>

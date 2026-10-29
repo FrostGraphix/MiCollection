@@ -65,20 +65,11 @@ export async function GET(
             .eq('is_active', true)
             .limit(4);
 
-          if (!relError && relatedData && relatedData.length > 0) {
+          if (!relError && relatedData) {
             relatedProducts = relatedData.map(formatDbProduct);
           }
         } catch (relErr) {
           console.warn('Could not query related products from Supabase:', relErr);
-        }
-
-        // If fewer than 4 related from DB, supplement from static PRODUCTS
-        if (relatedProducts.length < 4) {
-          const existingIds = new Set([String(product.id), ...relatedProducts.map((p) => String(p.id))]);
-          const extraRelated = PRODUCTS.filter(
-            (p) => p.cat === product.cat && !existingIds.has(String(p.id))
-          ).slice(0, 4 - relatedProducts.length);
-          relatedProducts = [...relatedProducts, ...extraRelated];
         }
 
         return NextResponse.json({

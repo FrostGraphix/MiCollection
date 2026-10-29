@@ -97,7 +97,7 @@ export async function GET(request: Request) {
       }
 
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         let products: Product[] = data.map(formatDbProduct);
 
         // Apply search keyword filter if provided

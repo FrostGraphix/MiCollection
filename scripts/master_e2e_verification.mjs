@@ -128,7 +128,10 @@ async function runApiTests() {
 
     const res = await fetch(`${BASE_URL}/api/orders`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'mc_admin_session=%7B%22role%22%3A%22super_admin%22%2C%22email%22%3A%22admin%40micollections.com%22%7D;',
+      },
       body: JSON.stringify(patchPayload)
     });
     const data = await res.json();

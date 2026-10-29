@@ -3,10 +3,19 @@ import { CustomerProfile, CustomerVIPTier } from '@/types';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { calculateVIPTier } from '@/lib/utils';
+import { verifyStaffAuth } from '@/lib/adminAuthServer';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  // Staff authentication check
+  if (!(await verifyStaffAuth(request))) {
+    return NextResponse.json(
+      { error: 'Unauthorized: Staff access required' },
+      { status: 401 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || searchParams.get('q');
@@ -29,7 +38,6 @@ export async function GET(request: Request) {
 
         const profiles = profilesRes.data || [];
         const orders = ordersRes.data || [];
-        console.log('CRM API: isSupabaseConfigured:', isSupabaseConfigured(), 'profiles count:', profiles.length, 'orders count:', orders.length, 'profiles err:', profilesRes.error, 'orders err:', ordersRes.error);
 
         if (profiles.length > 0 || orders.length > 0) {
           // Map to group orders by customer identifier
@@ -128,7 +136,7 @@ export async function GET(request: Request) {
             const lastOrderDate =
               dates.length > 0
                 ? new Date(dates[dates.length - 1]).toISOString().slice(0, 10)
-                : '2026-10-27';
+                : null;
 
             return {
               id: c.id,
@@ -164,7 +172,7 @@ export async function GET(request: Request) {
 
     let results = [...customerList];
 
-    // Filter by VIP Tier
+    // Filter by VIP Tier: disentangled bronze and regular matching
     if (tier && tier !== 'all') {
       const tierLower = tier.toLowerCase();
       results = results.filter((c) => {
@@ -173,8 +181,8 @@ export async function GET(request: Request) {
         if (tierLower === 'platinum' && cTier.includes('platinum')) return true;
         if (tierLower === 'gold' && cTier.includes('gold')) return true;
         if (tierLower === 'silver' && cTier.includes('silver')) return true;
-        if (tierLower === 'bronze' && (cTier.includes('bronze') || cTier.includes('regular'))) return true;
-        if (tierLower === 'regular' && (cTier.includes('regular') || cTier.includes('bronze'))) return true;
+        if (tierLower === 'bronze' && (cTier === 'bronze member' || cTier === 'bronze')) return true;
+        if (tierLower === 'regular' && cTier === 'regular') return true;
         return false;
       });
     }
@@ -204,9 +212,8 @@ export async function GET(request: Request) {
     const platinumCount = results.filter((c) => c.tier === 'VIP Platinum').length;
     const goldCount = results.filter((c) => c.tier === 'Gold Member').length;
     const silverCount = results.filter((c) => c.tier === 'Silver Member').length;
-    const bronzeCount = results.filter(
-      (c) => c.tier === 'Regular' || c.tier === 'Bronze Member'
-    ).length;
+    const bronzeCount = results.filter((c) => c.tier === 'Bronze Member').length;
+    const regularCount = results.filter((c) => c.tier === 'Regular').length;
 
     return NextResponse.json({
       customers: results,
@@ -219,6 +226,7 @@ export async function GET(request: Request) {
         goldCount,
         silverCount,
         bronzeCount,
+        regularCount,
       },
     });
   } catch (error) {
