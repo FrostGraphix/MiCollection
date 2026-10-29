@@ -55,10 +55,11 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Route Protection: Admin Console UI pages require staff session
+    // Route Protection: Admin Console UI pages and API endpoints require staff session
+    const isAdminApi = pathname.startsWith('/api/admin');
     const isAdminPage = pathname.startsWith('/admin') && pathname !== '/admin/login' && !pathname.startsWith('/admin/login/');
 
-    if (isAdminPage) {
+    if (isAdminApi || isAdminPage) {
       let isStaff = false;
 
       // 1. Check mc_admin_session cookie
@@ -87,14 +88,48 @@ export async function updateSession(request: NextRequest) {
 
         if (
           (role && validRoles.includes(role)) ||
-          staffEmails.includes(email) ||
-          email.endsWith('@micollections.com')
+          staffEmails.includes(email)
         ) {
           isStaff = true;
         }
       }
 
+      // 3. Check Authorization header for Bearer tokens
+      if (!isStaff && isAdminApi) {
+        const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.slice(7).trim();
+          try {
+            const { data: tokenData, error: tokenErr } = await supabase.auth.getUser(token);
+            if (!tokenErr && tokenData?.user) {
+              const u = tokenData.user;
+              const role = (u.app_metadata?.role || u.user_metadata?.role) as string | undefined;
+              const validRoles = ['super_admin', 'store_manager', 'dispatcher'];
+              const email = (u.email || '').toLowerCase().trim();
+              const staffEmails = [
+                'admin@micollections.com',
+                'manager@micollections.com',
+                'dispatch@micollections.com',
+              ];
+
+              if (
+                (role && validRoles.includes(role)) ||
+                staffEmails.includes(email)
+              ) {
+                isStaff = true;
+              }
+            }
+          } catch {}
+        }
+      }
+
       if (!isStaff) {
+        if (isAdminApi) {
+          return NextResponse.json(
+            { error: 'Unauthorized: Staff credentials required' },
+            { status: 401 }
+          );
+        }
         const adminLoginUrl = request.nextUrl.clone();
         adminLoginUrl.pathname = '/admin/login';
         return NextResponse.redirect(adminLoginUrl);

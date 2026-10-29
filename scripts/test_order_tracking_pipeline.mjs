@@ -240,7 +240,10 @@ async function runOrderTrackingSuite() {
 
     const patchRes = await fetch(`${BASE_URL}/api/orders`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminAuthData.session.access_token}`,
+      },
       body: JSON.stringify(dispatchPayload),
     });
     if (!patchRes.ok) {
@@ -278,7 +281,10 @@ async function runOrderTrackingSuite() {
     console.log('\n[Test 11] Testing delivery completion transition...');
     const deliveryRes = await fetch(`${BASE_URL}/api/orders`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminAuthData.session.access_token}`,
+      },
       body: JSON.stringify({ id: testOrderId, orderStatus: 'delivered' }),
     });
     if (!deliveryRes.ok) {

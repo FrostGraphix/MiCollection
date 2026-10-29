@@ -190,27 +190,27 @@ async function runSecurityTests() {
   // -------------------------------------------------------------
   console.log('\n[Suite 3] Testing Customer Session Isolation...');
 
-  const testEmail = `shopper.sec.${Date.now()}@micollections.com`;
+  const testEmail = `shopper.sec.${Date.now()}@gmail.com`;
   const testPassword = 'ShopperSecurePass2026!';
   let customerUser = null;
   let customerToken = null;
 
   try {
-    const { data: signUpData, error: signUpErr } = await client.auth.signUp({
+    const { data: created, error: createErr } = await adminSupabase.auth.admin.createUser({
       email: testEmail,
       password: testPassword,
-      options: { data: { full_name: 'Security Test Shopper', phone: '08123456789', state: 'Abuja (FCT)' } },
+      email_confirm: true,
+      user_metadata: { full_name: 'Security Test Shopper', phone: '08123456789', state: 'Abuja (FCT)' },
     });
 
-    if (!signUpErr && signUpData?.user) {
-      customerUser = signUpData.user;
-      customerToken = signUpData.session?.access_token;
-      if (!customerToken) {
-        const { data: signInData } = await client.auth.signInWithPassword({
-          email: testEmail,
-          password: testPassword,
-        });
-        customerToken = signInData?.session?.access_token;
+    if (!createErr && created?.user) {
+      customerUser = created.user;
+      const { data: signInData, error: signInErr } = await client.auth.signInWithPassword({
+        email: testEmail,
+        password: testPassword,
+      });
+      if (!signInErr && signInData?.session?.access_token) {
+        customerToken = signInData.session.access_token;
       }
     }
   } catch (err) {

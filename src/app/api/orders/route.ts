@@ -85,8 +85,7 @@ function isStaffUser(user: any): boolean {
   if (
     email === 'admin@micollections.com' ||
     email === 'manager@micollections.com' ||
-    email === 'dispatch@micollections.com' ||
-    email.endsWith('@micollections.com')
+    email === 'dispatch@micollections.com'
   ) {
     return true;
   }

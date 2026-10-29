@@ -208,7 +208,10 @@ async function runTest() {
 
   console.log(`[2.3] Fetching orders for logged-in user via GET /api/orders?userId=...&email=...`);
   const userOrdersRes = await fetch(
-    `http://localhost:3000/api/orders?userId=${encodeURIComponent(testUserId)}&email=${encodeURIComponent(TEST_EMAIL)}`
+    `http://localhost:3000/api/orders?userId=${encodeURIComponent(testUserId)}&email=${encodeURIComponent(TEST_EMAIL)}`,
+    {
+      headers: { Authorization: `Bearer ${signInData.session.access_token}` },
+    }
   );
   const userOrdersJson = await userOrdersRes.json();
 
@@ -222,10 +225,20 @@ async function runTest() {
   }
   console.log(`✅ [2.3 Passed] Customer order history retrieved (${userOrdersJson.orders.length} order found for customer)`);
 
+  // Acquire staff token for admin actions
+  const { data: staffAuth } = await clientSupabase.auth.signInWithPassword({
+    email: 'admin@micollections.com',
+    password: 'admin123@MiCollection',
+  });
+  const staffToken = staffAuth?.session?.access_token;
+
   console.log(`[2.4] Updating order status to 'confirmed' and paymentStatus to 'paid' via PATCH /api/orders...`);
   const patchRes = await fetch('http://localhost:3000/api/orders', {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(staffToken ? { Authorization: `Bearer ${staffToken}` } : {}),
+    },
     body: JSON.stringify({
       id: testOrderId,
       orderStatus: 'confirmed',
@@ -252,7 +265,9 @@ async function runTest() {
   console.log('====================================================');
 
   console.log(`[3.1] Fetching live CRM aggregated directory via GET /api/admin/customers...`);
-  const crmRes = await fetch('http://localhost:3000/api/admin/customers');
+  const crmRes = await fetch('http://localhost:3000/api/admin/customers', {
+    headers: staffToken ? { Authorization: `Bearer ${staffToken}` } : {},
+  });
   const crmJson = await crmRes.json();
 
   if (!crmRes.ok || !crmJson.customers) {
@@ -281,7 +296,9 @@ async function runTest() {
   });
 
   console.log(`[3.3] Searching CRM by query param: q=Halima...`);
-  const searchRes = await fetch('http://localhost:3000/api/admin/customers?q=Halima');
+  const searchRes = await fetch('http://localhost:3000/api/admin/customers?q=Halima', {
+    headers: staffToken ? { Authorization: `Bearer ${staffToken}` } : {},
+  });
   const searchJson = await searchRes.json();
   const foundInSearch = searchJson.customers?.some((c) => c.email === TEST_EMAIL);
 

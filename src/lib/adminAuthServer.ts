@@ -103,10 +103,5 @@ export async function verifyStaffAuth(request: Request): Promise<boolean> {
     }
   }
 
-  // 4. Safe read-only allowance: GET requests for executive metrics and live feeds are readable
-  if (request.method === 'GET') {
-    return true;
-  }
-
   return false;
 }
