@@ -209,7 +209,7 @@ export const CartDrawer: React.FC = () => {
                     key={p.id}
                     className="flex items-center justify-between gap-3 p-2 rounded-xl bg-[var(--surface2)] border border-[var(--line)]"
                   >
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white relative">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--surface)] relative">
                       <ProductImage
                         src={p.images?.[0]}
                         alt={p.name}

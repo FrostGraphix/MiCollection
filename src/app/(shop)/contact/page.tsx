@@ -134,7 +134,7 @@ export default function ContactPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Maryam"
-                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export default function ContactPage() {
                 <select
                   value={formData.topic}
                   onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand cursor-pointer"
+                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
                 >
                   <option>Product question</option>
                   <option>Delivery</option>
@@ -159,7 +159,7 @@ export default function ContactPage() {
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 placeholder="How can we help you today?"
-                className="w-full h-32 p-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand resize-y"
+                className="w-full h-32 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all resize-y"
               />
             </div>
 

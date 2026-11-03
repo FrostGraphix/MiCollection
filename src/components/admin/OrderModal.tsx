@@ -443,7 +443,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 mb-2">
               Itemized Packing Checklist:
             </h3>
-            <table className="w-full text-xs text-left border-collapse">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse min-w-[480px]">
               <thead>
                 <tr className="border-b border-gray-300 bg-gray-100 text-gray-700 uppercase">
                   <th className="p-2 w-10 text-center">[✓]</th>
@@ -469,6 +470,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Totals */}

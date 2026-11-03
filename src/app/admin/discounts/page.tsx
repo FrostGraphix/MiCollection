@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DiscountCoupon } from '@/types';
 import { INITIAL_COUPONS } from '@/lib/mockOrders';
 import { money } from '@/lib/utils';
@@ -31,6 +31,22 @@ export default function AdminDiscountsPage() {
 
   // Drawer / Modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  // Lock body scroll when coupon modal is open
+  useEffect(() => {
+    if (!isCreateOpen) return;
+    document.body.classList.add('locked');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsCreateOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.classList.remove('locked');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isCreateOpen]);
   const [newCode, setNewCode] = useState('');
   const [newType, setNewType] = useState<'percentage' | 'fixed'>('percentage');
   const [newValue, setNewValue] = useState<number>(10);

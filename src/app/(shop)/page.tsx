@@ -412,8 +412,8 @@ export default function HomePage() {
 
           {/* Screenshot floating visuals */}
           <div className="md:col-span-5 relative h-64 sm:h-72">
-            <div className="absolute left-[5%] top-[10%] w-36 rounded-2xl bg-white p-2 shadow-2xl -rotate-12 border border-purple-200">
-              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50 relative">
+            <div className="absolute left-[5%] top-[10%] w-36 rounded-2xl bg-[var(--surface)] p-2 shadow-2xl -rotate-12 border border-[var(--line)]">
+              <div className="aspect-square rounded-xl overflow-hidden bg-[var(--surface2)] relative">
                 <ProductImage
                   src={byId(13)?.images?.[0]}
                   alt="Earrings find"
@@ -421,8 +421,8 @@ export default function HomePage() {
                 />
               </div>
             </div>
-            <div className="absolute left-[35%] top-[0%] w-36 rounded-2xl bg-white p-2 shadow-2xl rotate-6 border border-purple-200 z-10">
-              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50 relative">
+            <div className="absolute left-[35%] top-[0%] w-36 rounded-2xl bg-[var(--surface)] p-2 shadow-2xl rotate-6 border border-[var(--line)] z-10">
+              <div className="aspect-square rounded-xl overflow-hidden bg-[var(--surface2)] relative">
                 <ProductImage
                   src={byId(7)?.images?.[0]}
                   alt="Sneaker find"
@@ -430,8 +430,8 @@ export default function HomePage() {
                 />
               </div>
             </div>
-            <div className="absolute right-[5%] top-[25%] w-36 rounded-2xl bg-white p-2 shadow-2xl rotate-12 border border-purple-200">
-              <div className="aspect-square rounded-xl overflow-hidden bg-purple-50 relative">
+            <div className="absolute right-[5%] top-[25%] w-36 rounded-2xl bg-[var(--surface)] p-2 shadow-2xl rotate-12 border border-[var(--line)]">
+              <div className="aspect-square rounded-xl overflow-hidden bg-[var(--surface2)] relative">
                 <ProductImage
                   src={byId(11)?.images?.[0]}
                   alt="Crossbody find"

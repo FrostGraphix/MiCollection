@@ -34,6 +34,22 @@ export default function AdminCustomersPage() {
   const [selectedState, setSelectedState] = useState('all');
   const [activeDossier, setActiveDossier] = useState<CustomerProfile | null>(null);
 
+  // Lock body scroll when customer dossier modal is open
+  useEffect(() => {
+    if (!activeDossier) return;
+    document.body.classList.add('locked');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveDossier(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.classList.remove('locked');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeDossier]);
+
   // Fetch live aggregated customers from API
   const fetchCustomers = async () => {
     setIsLoading(true);

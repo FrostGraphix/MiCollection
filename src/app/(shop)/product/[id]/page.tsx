@@ -59,6 +59,22 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState<number>(1);
   const [activeGalleryView, setActiveGalleryView] = useState<number>(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+
+  // Lock body scroll when zoom modal is open
+  useEffect(() => {
+    if (!isZoomOpen) return;
+    document.body.classList.add('locked');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsZoomOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.classList.remove('locked');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isZoomOpen]);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<'details' | 'delivery' | 'payment' | null>(
@@ -585,6 +601,9 @@ export default function ProductDetailPage() {
       {/* Lightbox Modal for High-Resolution Inspection */}
       {isZoomOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product Image Zoom"
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setIsZoomOpen(false)}
         >
@@ -595,7 +614,7 @@ export default function ProductDetailPage() {
           >
             <X className="w-6 h-6" />
           </button>
-          <div className="relative w-full max-w-4xl aspect-square max-h-[85vh] rounded-3xl overflow-hidden">
+          <div className="relative w-full max-w-4xl aspect-square max-h-[85vh] rounded-3xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <ProductImage
               src={productImages[activeGalleryView] || productImages[0]}
               alt={currentProduct.name}

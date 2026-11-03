@@ -170,6 +170,22 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
     };
   }, [soundEnabled]);
 
+  // Lock body scroll and listen for Escape key when selectedOrder modal is open
+  useEffect(() => {
+    if (!selectedOrder) return;
+    document.body.classList.add('locked');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedOrder(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.classList.remove('locked');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedOrder]);
+
   // Filter orders
   const filteredOrders = orders.filter((order) => {
     // Search query matching
@@ -201,7 +217,8 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
 
   // Status badge styling
   const getStatusBadge = (status?: string | null) => {
-    switch (status) {
+    const s = String(status || '').toLowerCase().trim();
+    switch (s) {
       case 'confirmed':
         return {
           label: 'Confirmed',
@@ -239,7 +256,8 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
 
   // Payment badge styling
   const getPaymentBadge = (method?: string | null) => {
-    switch (method) {
+    const m = String(method || '').toLowerCase().trim();
+    switch (m) {
       case 'transfer':
         return {
           label: 'Bank Transfer',
@@ -475,7 +493,15 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
           Order Details Modal (1-Click Action View)
           ==================================================================== */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Order ${selectedOrder.id} Details`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedOrder(null);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        >
           <div
             className="w-full max-w-lg rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in zoom-in-95 duration-200"
             style={{ boxShadow: 'var(--shadow)' }}
@@ -564,7 +590,7 @@ export const RecentOrdersTicker: React.FC<RecentOrdersTickerProps> = ({
                     Payment Method
                   </span>
                   <span className="text-xs font-bold text-[var(--ink)]">
-                    {getPaymentBadge(selectedOrder.paymentMethod).label} &bull;{' '}
+                    {(getPaymentBadge(selectedOrder.paymentMethod)?.label || 'Payment')} &bull;{' '}
                     <span className="text-emerald-500 uppercase">
                       {selectedOrder.paymentStatus}
                     </span>

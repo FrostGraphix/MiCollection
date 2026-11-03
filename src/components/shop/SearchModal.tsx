@@ -31,9 +31,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   // Lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
+      document.body.classList.add('locked');
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       return () => {
+        document.body.classList.remove('locked');
         document.body.style.overflow = originalOverflow;
       };
     }

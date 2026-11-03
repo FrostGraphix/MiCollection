@@ -402,7 +402,7 @@ export default function CheckoutPage() {
                 <select
                   value={formData.state}
                   onChange={(e) => handleStateChange(e.target.value)}
-                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand cursor-pointer"
+                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
                 >
                   {STATES.map((s) => (
                     <option key={s} value={s}>
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
                   value={formData.landmark}
                   onChange={(e) => setFormData({ ...formData, landmark: e.target.value })}
                   placeholder="e.g. Opposite the central mosque"
-                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+                  className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                 />
               </div>
             </div>
@@ -618,7 +618,7 @@ export default function CheckoutPage() {
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
               placeholder="Any specific requests about sizes, colours, timing or apartment directions?"
-              className="w-full h-24 p-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+              className="w-full h-24 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             />
           </section>
         </div>

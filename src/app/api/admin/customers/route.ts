@@ -234,3 +234,131 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Failed to retrieve customers' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  if (!(await verifyStaffAuth(request))) {
+    return NextResponse.json(
+      { error: 'Unauthorized: Staff access required' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const id = body.id;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 });
+    }
+
+    const updates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (body.full_name !== undefined) updates.full_name = String(body.full_name).trim();
+    if (body.name !== undefined && body.full_name === undefined) updates.full_name = String(body.name).trim();
+    if (body.phone !== undefined) updates.phone = String(body.phone).trim();
+    if (body.address !== undefined) updates.address = String(body.address).trim();
+    if (body.state !== undefined) updates.state = String(body.state).trim();
+
+    if (isSupabaseConfigured()) {
+      const supabase = createAdminClient(true);
+      const { data: updatedProfile, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.warn('Supabase customer profile update error:', error.message);
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      // Sync metadata in Supabase Auth
+      try {
+        await supabase.auth.admin.updateUserById(id, {
+          user_metadata: {
+            full_name: updates.full_name,
+            phone: updates.phone,
+            address: updates.address,
+            state: updates.state,
+          },
+        });
+      } catch (metaErr) {
+        console.warn('Metadata sync warning on customer update:', metaErr);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Customer updated successfully',
+        customer: updatedProfile,
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Customer updated',
+      customer: { id, ...updates },
+    });
+  } catch (error: any) {
+    console.error('Error in PATCH /api/admin/customers:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to update customer' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  if (!(await verifyStaffAuth(request))) {
+    return NextResponse.json(
+      { error: 'Unauthorized: Staff access required' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get('id');
+
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body?.id;
+      } catch {}
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'Customer ID is required for deletion' }, { status: 400 });
+    }
+
+    if (isSupabaseConfigured()) {
+      const supabase = createAdminClient(true);
+
+      // Delete customer profile
+      const { error: profileErr } = await supabase.from('profiles').delete().eq('id', id);
+      if (profileErr) {
+        console.warn('Supabase customer delete profile warning:', profileErr.message);
+      }
+
+      // Delete auth user if valid UUID
+      try {
+        await supabase.auth.admin.deleteUser(id);
+      } catch (authErr) {
+        console.warn('Supabase customer delete auth warning:', authErr);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Customer deleted successfully',
+      deletedId: id,
+    });
+  } catch (error: any) {
+    console.error('Error in DELETE /api/admin/customers:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to delete customer' },
+      { status: 500 }
+    );
+  }
+}

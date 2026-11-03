@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque, Figtree, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -31,6 +31,17 @@ const instrumentSerif = Instrument_Serif({
   variable: '--font-serif',
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fcfaff' },
+    { media: '(prefers-color-scheme: dark)', color: '#08040f' },
+  ],
+};
 
 export const metadata: Metadata = {
   title: 'MiCollections — Every Variety. One Home. | FCT Abuja, Nigeria',

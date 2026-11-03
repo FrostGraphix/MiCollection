@@ -429,7 +429,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
             <button
               id="headerCartBtn"
               onClick={openDrawer}
-              className="hidden sm:flex group/cart relative w-10 h-10 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
+              className="flex group/cart relative w-10 h-10 rounded-full items-center justify-center hover:bg-[var(--pill)] text-[var(--ink)] hover:text-brand active:scale-95 transition-all duration-200"
               aria-label="Shopping cart"
               title="View shopping bag"
             >
@@ -519,7 +519,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
               {/* Universal Glassmorphic Account Popover (Desktop & Mobile) */}
               {isProfileMenuOpen && (
                 <div
-                  className="absolute right-0 top-[calc(100%+12px)] w-80 p-3.5 rounded-3xl bg-[var(--dropdown-bg)] backdrop-blur-2xl border border-[var(--line)] shadow-2xl z-50 animate-dropdown-in before:absolute before:-top-3 before:inset-x-0 before:h-3 before:content-[''] transition-all"
+                  className="absolute right-0 top-[calc(100%+12px)] w-[calc(100vw-2rem)] sm:w-80 max-w-sm p-3.5 rounded-3xl bg-[var(--dropdown-bg)] backdrop-blur-2xl border border-[var(--line)] shadow-2xl z-50 animate-dropdown-in before:absolute before:-top-3 before:inset-x-0 before:h-3 before:content-[''] transition-all"
                   style={{ boxShadow: 'var(--dropdown-shadow)' }}
                 >
                   {activeUser ? (

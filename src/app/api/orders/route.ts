@@ -516,13 +516,13 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const id = body.id;
+    const id = body.id || body.orderId;
     const orderStatus = (body.orderStatus || body.order_status) as OrderStatus | undefined;
     const paymentStatus = (body.paymentStatus || body.payment_status) as 'pending' | 'paid' | 'failed' | undefined;
     const paymentMethod = body.paymentMethod || body.payment_method;
     const payLabel = body.payLabel || body.pay_label;
     let note = body.note;
-    const carrier = body.carrier;
+    const carrier = body.carrier || body.courier;
     const trackingNumber = body.trackingNumber || body.tracking_number;
     const riderName = body.riderName || body.rider_name;
     const riderPhone = body.riderPhone || body.rider_phone;
@@ -623,6 +623,68 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   } catch (error: any) {
     console.error('Order update error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const sessionUser = await resolveSessionUser(request);
+    const isStaff = isStaffUser(sessionUser);
+    const isInternal = isInternalOrSigned(request);
+
+    if (!isStaff && !isInternal) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Staff credentials or signed authorization required' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get('id');
+
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body?.id;
+      } catch {}
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'Order ID is required for deletion' }, { status: 400 });
+    }
+
+    // Delete from Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        // Delete related order_items first
+        await supabase.from('order_items').delete().eq('order_id', id);
+
+        const { error: deleteError } = await supabase.from('orders').delete().eq('id', id);
+        if (deleteError) {
+          console.warn('Supabase delete order warning:', deleteError.message);
+          return NextResponse.json({ error: deleteError.message }, { status: 400 });
+        }
+      } catch (err: any) {
+        console.warn('Supabase delete order error:', err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
+      }
+    }
+
+    // Remove from local cache
+    delete localOrdersCache[id];
+
+    return NextResponse.json({
+      success: true,
+      message: 'Order deleted successfully',
+      deletedId: id,
+    });
+  } catch (error: any) {
+    console.error('Order deletion error:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

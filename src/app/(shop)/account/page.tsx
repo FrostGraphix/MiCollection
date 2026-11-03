@@ -115,6 +115,24 @@ export default function AccountPage() {
 
   // Change Password State
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Lock body scroll when account modal is open
+  useEffect(() => {
+    const isAnyModalOpen = isEditingProfile || isChangingPassword;
+    if (!isAnyModalOpen) return;
+    document.body.classList.add('locked');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsEditingProfile(false);
+        setIsChangingPassword(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.classList.remove('locked');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isEditingProfile, isChangingPassword]);
   const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' });
   const [passwordFeedback, setPasswordFeedback] = useState<{ message: string; isError: boolean } | null>(null);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
@@ -568,7 +586,15 @@ export default function AccountPage() {
 
       {/* Edit Profile Modal */}
       {isEditingProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit Profile"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEditingProfile(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+        >
           <div className="relative w-full max-w-md p-6 sm:p-8 rounded-[32px] bg-[var(--surface)] border border-[var(--line)] shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
               <h3 className="font-display text-xl font-bold flex items-center gap-2">
@@ -576,6 +602,7 @@ export default function AccountPage() {
               </h3>
               <button
                 onClick={() => setIsEditingProfile(false)}
+                aria-label="Close edit profile dialog"
                 className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--mute)] hover:text-[var(--ink)] hover:bg-[var(--surface2)]"
               >
                 <X className="w-4 h-4" />
@@ -603,7 +630,7 @@ export default function AccountPage() {
                   value={editForm.full_name}
                   onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
                   placeholder="e.g. Maryam Bello"
-                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--line)] text-xs sm:text-sm outline-none focus:border-brand"
                 />
               </div>
 
@@ -614,7 +641,7 @@ export default function AccountPage() {
                   value={editForm.phone}
                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                   placeholder="e.g. 0814 573 6483"
-                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--line)] text-xs sm:text-sm outline-none focus:border-brand"
                 />
               </div>
 
@@ -625,7 +652,7 @@ export default function AccountPage() {
                   value={editForm.address}
                   onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                   placeholder="e.g. Plot 104, Diplomatic Zone, Maitama"
-                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--line)] text-xs sm:text-sm outline-none focus:border-brand"
                 />
               </div>
 
@@ -634,7 +661,7 @@ export default function AccountPage() {
                 <select
                   value={editForm.state}
                   onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
-                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand cursor-pointer"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--line)] text-xs sm:text-sm outline-none focus:border-brand cursor-pointer"
                 >
                   {STATES.map((s) => (
                     <option key={s} value={s}>
@@ -675,7 +702,15 @@ export default function AccountPage() {
 
       {/* Change Password Modal */}
       {isChangingPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Account Security"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsChangingPassword(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+        >
           <div className="relative w-full max-w-md p-6 sm:p-8 rounded-[32px] bg-[var(--surface)] border border-[var(--line)] shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
               <h3 className="font-display text-xl font-bold flex items-center gap-2">
@@ -683,6 +718,7 @@ export default function AccountPage() {
               </h3>
               <button
                 onClick={() => setIsChangingPassword(false)}
+                aria-label="Close password dialog"
                 className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--mute)] hover:text-[var(--ink)] hover:bg-[var(--surface2)]"
               >
                 <X className="w-4 h-4" />
@@ -710,7 +746,7 @@ export default function AccountPage() {
                   value={passwordForm.password}
                   onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
                   placeholder="At least 6 characters"
-                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--line)] text-xs sm:text-sm outline-none focus:border-brand"
                 />
               </div>
 
@@ -722,7 +758,7 @@ export default function AccountPage() {
                   value={passwordForm.confirm}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
                   placeholder="Re-enter new password"
-                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-transparent text-xs sm:text-sm outline-none focus:border-brand"
+                  className="w-full h-11 px-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--line)] text-xs sm:text-sm outline-none focus:border-brand"
                 />
               </div>
 

@@ -108,7 +108,7 @@ export default function RegisterPage() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g. Maryam Bello"
-              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function RegisterPage() {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               placeholder="e.g. 0814 573 6483"
-              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             />
           </div>
 
@@ -128,7 +128,7 @@ export default function RegisterPage() {
             <select
               value={formData.state}
               onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand cursor-pointer"
+              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer"
             >
               {STATES.map((s) => (
                 <option key={s} value={s}>
@@ -146,7 +146,7 @@ export default function RegisterPage() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="you@example.com"
-              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             />
           </div>
 
@@ -158,7 +158,7 @@ export default function RegisterPage() {
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               placeholder="At least 6 characters"
-              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+              className="w-full h-12 px-4 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             />
           </div>
 

@@ -191,7 +191,7 @@ export default function ResetPasswordPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 6 characters"
-                    className="w-full h-12 pl-4 pr-11 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+                    className="w-full h-12 pl-4 pr-11 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                   />
                   <button
                     type="button"
@@ -213,7 +213,7 @@ export default function ResetPasswordPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat your new password"
-                    className="w-full h-12 pl-4 pr-11 rounded-2xl bg-[var(--surface2)] border border-transparent text-sm outline-none focus:border-brand"
+                    className="w-full h-12 pl-4 pr-11 rounded-2xl bg-[var(--surface2)] border border-[var(--line)] text-sm text-[var(--ink)] placeholder:text-[var(--mute)] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                   />
                   <button
                     type="button"
