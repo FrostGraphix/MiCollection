@@ -222,12 +222,17 @@ export default function AdminOverviewPage() {
     document.body.removeChild(link);
   };
 
-  const revenueSparkline = analyticsData?.revenueGrowth?.map((p) => Math.round(p.revenue / 1000)) || [
-    42, 55, 68, 75, 88, 95, 110, 145, 180, 220, 260, 285,
-  ];
-  const orderSparkline = analyticsData?.revenueGrowth?.map((p) => p.orders) || [
-    1, 1, 2, 2, 3, 4, 5, 5, 6, 7, 5, 2,
-  ];
+  const revenuePoints = analyticsData?.revenueGrowth && analyticsData.revenueGrowth.length > 0
+    ? analyticsData.revenueGrowth
+    : undefined;
+
+  const revenueSparkline = revenuePoints
+    ? revenuePoints.map((p) => Math.round(p.revenue / 1000))
+    : [42, 55, 68, 75, 88, 95, 110, 145, 180, 220, 260, 285];
+
+  const orderSparkline = revenuePoints
+    ? revenuePoints.map((p) => p.orders)
+    : [1, 1, 2, 2, 3, 4, 5, 5, 6, 7, 5, 2];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -362,20 +367,38 @@ export default function AdminOverviewPage() {
       {/* Main Charts Grid: 30-Day Revenue Area Curve (2 cols) & Category Sales Donut (1 col) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <RevenueGrowthChart data={analyticsData?.revenueGrowth} />
+          <RevenueGrowthChart data={revenuePoints} />
         </div>
         <div>
-          <CategorySalesDonut categories={analyticsData?.categoryBreakdown} />
+          <CategorySalesDonut
+            categories={
+              analyticsData?.categoryBreakdown && analyticsData.categoryBreakdown.length > 0
+                ? analyticsData.categoryBreakdown
+                : undefined
+            }
+          />
         </div>
       </div>
 
       {/* Secondary Charts Grid: Nigerian Geographic Distribution & Conversion Funnel */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <NigeriaStateDistribution distribution={analyticsData?.stateDistribution} />
+          <NigeriaStateDistribution
+            distribution={
+              analyticsData?.stateDistribution && analyticsData.stateDistribution.length > 0
+                ? analyticsData.stateDistribution
+                : undefined
+            }
+          />
         </div>
         <div>
-          <ConversionFunnelChart stages={analyticsData?.conversionFunnel} />
+          <ConversionFunnelChart
+            stages={
+              analyticsData?.conversionFunnel && analyticsData.conversionFunnel.length > 0
+                ? analyticsData.conversionFunnel
+                : undefined
+            }
+          />
         </div>
       </div>
 

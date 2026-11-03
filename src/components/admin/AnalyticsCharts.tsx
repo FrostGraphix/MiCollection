@@ -126,6 +126,7 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
   title = 'Revenue Velocity & Trajectory',
   subtitle = '30-day cumulative GMV performance across online & WhatsApp sales',
 }) => {
+  const chartData = (data && data.length > 0) ? data : DEFAULT_30_DAY_REVENUE;
   const gradientId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -140,20 +141,25 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
   const chartW = width - padLeft - padRight;
   const chartH = height - padTop - padBottom;
 
-  const revenues = data.map((d) => d.revenue);
+  const revenues = chartData.map((d) => d.revenue);
   const minVal = 0; // Baseline at 0 for accurate business scale
   const rawMax = Math.max(...revenues, 500000);
   const maxVal = Math.ceil(rawMax / 100000) * 100000;
 
-  // Compute point coordinates
-  const points = data.map((d, i) => {
-    const x = padLeft + (i / (data.length - 1)) * chartW;
-    const y = padTop + chartH - (d.revenue / maxVal) * chartH;
+  // Compute point coordinates defensively
+  const points = chartData.map((d, i) => {
+    const x = chartData.length > 1
+      ? padLeft + (i / (chartData.length - 1)) * chartW
+      : padLeft + chartW / 2;
+    const y = padTop + chartH - (d.revenue / (maxVal || 1)) * chartH;
     return { x, y, ...d };
   });
 
+  const firstPoint = points[0] || { x: padLeft, y: padTop + chartH, date: '', revenue: 0, orders: 0 };
+  const lastPoint = points[points.length - 1] || firstPoint;
+
   // Smooth Catmull-Rom Bezier Spline
-  let splinePath = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+  let splinePath = 'M ' + firstPoint.x.toFixed(1) + ',' + firstPoint.y.toFixed(1);
   for (let i = 0; i < points.length - 1; i++) {
     const p0 = points[Math.max(0, i - 1)];
     const p1 = points[i];
@@ -165,12 +171,10 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
     const cp2x = p2.x - (p3.x - p1.x) * 0.18;
     const cp2y = p2.y - (p3.y - p1.y) * 0.18;
 
-    splinePath += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+    splinePath += ' C ' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1) + ' ' + cp2x.toFixed(1) + ',' + cp2y.toFixed(1) + ' ' + p2.x.toFixed(1) + ',' + p2.y.toFixed(1);
   }
 
-  const firstPoint = points[0];
-  const lastPoint = points[points.length - 1];
-  const areaPath = `${splinePath} L ${lastPoint.x.toFixed(1)},${padTop + chartH} L ${firstPoint.x.toFixed(1)},${padTop + chartH} Z`;
+  const areaPath = splinePath + ' L ' + lastPoint.x.toFixed(1) + ',' + (padTop + chartH) + ' L ' + firstPoint.x.toFixed(1) + ',' + (padTop + chartH) + ' Z';
 
   // Y-axis grid levels (5 ticks: 0, 25%, 50%, 75%, 100%)
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -180,27 +184,33 @@ export const RevenueGrowthChart: React.FC<RevenueGrowthChartProps> = ({
   });
 
   // Selected or active point
-  const activePoint = hoverIndex !== null ? points[hoverIndex] : points[points.length - 1];
+  const activePoint = hoverIndex !== null && points[hoverIndex]
+    ? points[hoverIndex]
+    : (points.length > 0 ? points[points.length - 1] : null);
 
   // Mouse move handler for interactive tooltip
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (chartData.length === 0) return;
     const svgRect = e.currentTarget.getBoundingClientRect();
+    if (!svgRect.width) return;
     const mouseX = e.clientX - svgRect.left;
     const scale = width / svgRect.width;
     const svgX = mouseX * scale;
 
     const clampedX = Math.max(padLeft, Math.min(padLeft + chartW, svgX));
-    const ratio = (clampedX - padLeft) / chartW;
-    const closestIdx = Math.round(ratio * (data.length - 1));
-    setHoverIndex(Math.max(0, Math.min(data.length - 1, closestIdx)));
+    const ratio = chartW > 0 ? (clampedX - padLeft) / chartW : 0;
+    const closestIdx = chartData.length > 1 ? Math.round(ratio * (chartData.length - 1)) : 0;
+    setHoverIndex(Math.max(0, Math.min(chartData.length - 1, closestIdx)));
   };
 
   const handleMouseLeave = () => {
     setHoverIndex(null);
   };
 
-  const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0);
-  const peakDay = points.reduce((prev, curr) => (curr.revenue > prev.revenue ? curr : prev), points[0]);
+  const totalRevenue = chartData.reduce((sum, d) => sum + (d.revenue || 0), 0);
+  const peakDay = points.length > 0
+    ? points.reduce((prev, curr) => (curr.revenue > prev.revenue ? curr : prev), points[0])
+    : { revenue: 0, date: 'N/A', orders: 0 };
 
   return (
     <div
@@ -430,20 +440,21 @@ export const CategorySalesDonut: React.FC<CategorySalesDonutProps> = ({
   title = 'Category Revenue Share',
   subtitle = 'Sales distribution across MiCollections curated lines',
 }) => {
+  const chartCategories = (categories && categories.length > 0) ? categories : DEFAULT_CATEGORY_BREAKDOWN;
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const radius = 70;
   const strokeWidth = 22;
   const circumference = 2 * Math.PI * radius; // ~439.82
 
-  const totalRevenue = categories.reduce((acc, cat) => acc + cat.revenue, 0);
+  const totalRevenue = chartCategories.reduce((acc, cat) => acc + (cat.revenue || 0), 0);
 
   // Calculate cumulative offsets for SVG stroke-dashoffset
   let cumulativeShare = 0;
-  const arcs = categories.map((cat, idx) => {
-    const strokeLength = (cat.share / 100) * circumference;
+  const arcs = chartCategories.map((cat, idx) => {
+    const strokeLength = ((cat.share || 0) / 100) * circumference;
     const offset = (cumulativeShare / 100) * circumference;
-    cumulativeShare += cat.share;
+    cumulativeShare += (cat.share || 0);
     return {
       ...cat,
       strokeLength,
@@ -452,7 +463,7 @@ export const CategorySalesDonut: React.FC<CategorySalesDonutProps> = ({
     };
   });
 
-  const activeCategory = hoveredIdx !== null ? categories[hoveredIdx] : null;
+  const activeCategory = hoveredIdx !== null && chartCategories[hoveredIdx] ? chartCategories[hoveredIdx] : null;
 
   return (
     <div className="rounded-2xl md:rounded-3xl p-5 sm:p-7 backdrop-blur-xl bg-[var(--surface)]/80 border border-[var(--line)] shadow-xl flex flex-col justify-between">
@@ -537,7 +548,7 @@ export const CategorySalesDonut: React.FC<CategorySalesDonutProps> = ({
                 {money(totalRevenue)}
               </span>
               <span className="block text-[10px] text-[var(--mute)]">
-                5 Product Lines
+                {chartCategories.length} Product Lines
               </span>
             </div>
           )}
@@ -546,7 +557,7 @@ export const CategorySalesDonut: React.FC<CategorySalesDonutProps> = ({
 
       {/* Category Breakdown List */}
       <div className="flex flex-col gap-2 pt-3 border-t border-[var(--line)]">
-        {categories.map((cat, idx) => {
+        {chartCategories.map((cat, idx) => {
           const isHovered = hoveredIdx === idx;
           return (
             <div
@@ -608,6 +619,8 @@ export const NigeriaStateDistribution: React.FC<NigeriaStateDistributionProps> =
   title = 'Fulfillment by Nigerian State',
   subtitle = 'Order logistics share: Doorstep Abuja deliveries vs Interstate courier',
 }) => {
+  const chartDistribution = (distribution && distribution.length > 0) ? distribution : DEFAULT_STATE_DISTRIBUTION;
+
   return (
     <div className="rounded-2xl md:rounded-3xl p-5 sm:p-7 backdrop-blur-xl bg-[var(--surface)]/80 border border-[var(--line)] shadow-xl flex flex-col justify-between">
       {/* Header */}
@@ -630,7 +643,7 @@ export const NigeriaStateDistribution: React.FC<NigeriaStateDistributionProps> =
 
       {/* State Progress Bars */}
       <div className="flex flex-col gap-4">
-        {distribution.map((item, idx) => {
+        {chartDistribution.map((item, idx) => {
           const isTop = idx === 0;
           return (
             <div key={idx} className="group">
@@ -700,8 +713,9 @@ export const ConversionFunnelChart: React.FC<ConversionFunnelChartProps> = ({
   title = 'E-Commerce Conversion Funnel',
   subtitle = 'Progression through store discovery, cart building, and order fulfillment',
 }) => {
+  const chartStages = (stages && stages.length > 0) ? stages : DEFAULT_CONVERSION_FUNNEL;
   const stageIcons = [Users, Eye, ShoppingCart, CreditCard, CheckCircle2];
-  const maxCount = stages[0]?.count || 1;
+  const maxCount = Math.max(1, chartStages[0]?.count || 1);
 
   return (
     <div className="rounded-2xl md:rounded-3xl p-5 sm:p-7 backdrop-blur-xl bg-[var(--surface)]/80 border border-[var(--line)] shadow-xl flex flex-col justify-between">
@@ -725,7 +739,7 @@ export const ConversionFunnelChart: React.FC<ConversionFunnelChartProps> = ({
 
       {/* Stage by stage funnel bars */}
       <div className="flex flex-col gap-3">
-        {stages.map((stage, idx) => {
+        {chartStages.map((stage, idx) => {
           const Icon = stageIcons[idx % stageIcons.length];
           const relativeWidth = Math.max(18, (stage.count / maxCount) * 100);
           const isFinal = idx === stages.length - 1;

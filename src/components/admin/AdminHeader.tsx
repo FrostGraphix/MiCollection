@@ -31,6 +31,7 @@ import { AudioAlert } from './AudioAlert';
 import { useTheme } from '@/context/ThemeContext';
 
 interface AdminHeaderProps {
+  user?: AdminUser | null;
   onToggleMobileMenu?: () => void;
   onOpenSearch?: () => void;
 }
@@ -80,6 +81,7 @@ const INITIAL_NOTIFICATIONS: StoreNotification[] = [
 ];
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({
+  user,
   onToggleMobileMenu,
   onOpenSearch,
 }) => {
@@ -87,7 +89,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
 
-  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(user || null);
   const [storeActive, setStoreActive] = useState<boolean>(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -98,7 +100,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   // Sync session and store status
   useEffect(() => {
-    setCurrentUser(getAdminSession());
+    if (user) {
+      setCurrentUser(user);
+    } else {
+      setCurrentUser(getAdminSession());
+    }
     setStoreActive(isStoreOpen());
 
     const handleAuthChange = (e: Event) => {

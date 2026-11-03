@@ -33,9 +33,9 @@ export default function AdminLayout({
     // Check active session
     const currentSession = getAdminSession();
 
-    // Discard mock bypass: unauthenticated users are directed to /admin/login
+    // Unauthenticated visitors are locked out and smoothly redirected to /admin/login
     if (!currentSession) {
-      setIsVerifying(false);
+      setIsVerifying(true);
       router.replace('/admin/login');
       return;
     }
@@ -48,6 +48,7 @@ export default function AdminLayout({
       const nextUser = custom.detail?.user;
       if (!nextUser && !isLoginPage) {
         setSession(null);
+        setIsVerifying(true);
         router.replace('/admin/login');
       } else {
         setSession(nextUser || null);
@@ -65,8 +66,8 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  // Luxury loading state while verifying admin authentication
-  if (isVerifying) {
+  // Luxury loading state while verifying admin authentication or redirecting unauthenticated visitor
+  if (isVerifying || !session) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg)] text-[var(--ink)]">
         <div className="relative mb-4">
@@ -99,6 +100,7 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
         <AdminHeader
+          user={session}
           onToggleMobileMenu={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 space-y-6">
