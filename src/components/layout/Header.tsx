@@ -281,7 +281,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
     <>
       <header
         ref={headerRef}
-        className={`sticky top-3 z-50 transition-transform duration-500 w-full max-w-[840px] mx-auto px-4 relative ${
+        className={`sticky top-3 z-50 transition-transform duration-500 w-full max-w-[860px] mx-auto px-4 relative ${
           isHidden ? '-translate-y-28' : 'translate-y-0'
         }`}
       >
@@ -308,7 +308,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
           <nav
             ref={navWrapRef}
             onMouseLeave={resetPill}
-            className="hidden lg:flex items-center gap-1 relative"
+            className="hidden lg:flex items-center gap-1 relative flex-shrink-0"
           >
             <i ref={pillRef} className="nl-pill" />
             {navLinks.map((link) => {
@@ -343,13 +343,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
                         openMega();
                         movePill(e.currentTarget);
                       }}
-                      className={`relative z-10 flex items-center gap-1.5 px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 select-none ${
+                      className={`relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-full font-medium text-sm transition-all duration-200 select-none whitespace-nowrap flex-shrink-0 ${
                         isActive || isMegaOpen
                           ? 'text-brand font-semibold nl-active'
                           : 'text-[var(--ink)] hover:text-brand'
                       }`}
                     >
-                      <span>{link.label}</span>
+                      <span className="whitespace-nowrap">{link.label}</span>
                       <ChevronDown
                         className={`w-3.5 h-3.5 transition-transform duration-300 ${
                           isMegaOpen ? 'rotate-180 text-brand' : 'opacity-70'
@@ -372,13 +372,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
                     closeMega(50);
                     movePill(e.currentTarget);
                   }}
-                  className={`relative z-10 px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 select-none ${
+                  className={`relative z-10 px-3.5 py-2 rounded-full font-medium text-sm transition-all duration-200 select-none whitespace-nowrap flex-shrink-0 ${
                     isActive && !isMegaOpen
                       ? 'text-brand font-semibold nl-active'
                       : 'text-[var(--ink)] hover:text-brand'
                   }`}
                 >
-                  {link.label}
+                  <span className="whitespace-nowrap">{link.label}</span>
                 </Link>
               );
             })}
@@ -776,7 +776,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="font-display text-3xl sm:text-4xl font-bold hover:text-brand-light"
                     >
-                      {link.label}
+                      <span className="whitespace-nowrap">{link.label}</span>
                     </Link>
                     <button
                       onClick={() => setMobileShopExpanded(!mobileShopExpanded)}
@@ -820,7 +820,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch }) => {
                 className="font-display text-3xl sm:text-4xl font-bold py-3.5 border-b border-white/10 hover:text-brand-light flex items-center justify-between"
                 style={{ transitionDelay: `${0.1 + idx * 0.05}s` }}
               >
-                <span>{link.label}</span>
+                <span className="whitespace-nowrap">{link.label}</span>
                 <span className="text-xs font-normal text-purple-300">Browse</span>
               </Link>
             );
