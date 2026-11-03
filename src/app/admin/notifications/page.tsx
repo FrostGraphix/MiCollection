@@ -181,7 +181,7 @@ export default function AdminNotificationsPage() {
         </div>
 
         {/* Global Action: Test Audio Chime */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => playOrderChime(true)}
@@ -204,11 +204,11 @@ export default function AdminNotificationsPage() {
       </div>
 
       {/* Primary Navigation Tabs */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[var(--surface)] border border-[var(--line)] w-fit shadow-sm">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[var(--surface)] border border-[var(--line)] w-full sm:w-fit overflow-x-auto max-w-full flex-nowrap scrollbar-none shadow-sm">
         <button
           type="button"
           onClick={() => setActiveTab('alerts')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'alerts'
               ? 'bg-gradient-to-r from-brand to-orchid text-white shadow-sm'
               : 'text-[var(--mute)] hover:text-[var(--ink)]'
@@ -230,7 +230,7 @@ export default function AdminNotificationsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('emails')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'emails'
               ? 'bg-gradient-to-r from-brand to-orchid text-white shadow-sm'
               : 'text-[var(--mute)] hover:text-[var(--ink)]'
@@ -243,7 +243,7 @@ export default function AdminNotificationsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('broadcast')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'broadcast'
               ? 'bg-gradient-to-r from-brand to-orchid text-white shadow-sm'
               : 'text-[var(--mute)] hover:text-[var(--ink)]'
@@ -258,8 +258,8 @@ export default function AdminNotificationsPage() {
       {activeTab === 'alerts' && (
         <div className="space-y-4 animate-in fade-in duration-300">
           {/* Sub Filters & Actions */}
-          <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-[var(--surface)] border border-[var(--line)]">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[var(--surface)] border border-[var(--line)]">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setSelectedFilter('all')}

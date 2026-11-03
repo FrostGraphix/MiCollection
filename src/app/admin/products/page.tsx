@@ -300,7 +300,7 @@ export default function AdminProductsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             type="button"
             onClick={fetchProducts}
@@ -312,7 +312,7 @@ export default function AdminProductsPage() {
 
           <Link
             href="/admin/products/new"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand to-orchid hover:opacity-95 shadow-md shadow-brand/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand to-orchid hover:opacity-95 shadow-md shadow-brand/25 transition-all hover:scale-[1.02] active:scale-[0.98] flex-1 sm:flex-initial"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Add New Product</span>
@@ -395,7 +395,7 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Filter Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2.5">
           {/* Category Dropdown */}
           <select
             value={selectedCat}
@@ -403,7 +403,7 @@ export default function AdminProductsPage() {
               setSelectedCat(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-3 py-2 rounded-xl bg-[var(--surface2)] border border-purple-500/20 text-xs font-medium text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full sm:w-auto px-3 py-2 rounded-xl bg-[var(--surface2)] border border-purple-500/20 text-xs font-medium text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
           >
             {categoryOptions.map((c) => (
               <option key={c.id} value={c.id}>
@@ -419,7 +419,7 @@ export default function AdminProductsPage() {
               setStockFilter(e.target.value as any);
               setCurrentPage(1);
             }}
-            className="px-3 py-2 rounded-xl bg-[var(--surface2)] border border-purple-500/20 text-xs font-medium text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full sm:w-auto px-3 py-2 rounded-xl bg-[var(--surface2)] border border-purple-500/20 text-xs font-medium text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
           >
             <option value="all">All Stock Levels</option>
             <option value="in_stock">In Stock (&gt;5)</option>
@@ -434,7 +434,7 @@ export default function AdminProductsPage() {
               setStatusFilter(e.target.value as any);
               setCurrentPage(1);
             }}
-            className="px-3 py-2 rounded-xl bg-[var(--surface2)] border border-purple-500/20 text-xs font-medium text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full sm:w-auto px-3 py-2 rounded-xl bg-[var(--surface2)] border border-purple-500/20 text-xs font-medium text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active Only</option>
@@ -444,9 +444,193 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Data Table */}
+      {/* Catalog Display: Mobile Cards (<md) + Desktop Table (>=md) */}
       <div className="rounded-3xl bg-[var(--surface)]/90 backdrop-blur-xl border border-purple-500/15 shadow-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Responsive Product Cards */}
+        <div className="md:hidden divide-y divide-purple-500/10">
+          {loading ? (
+            <div className="py-16 text-center text-[var(--mute)]">
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto text-brand mb-2" />
+              <span>Loading luxury catalog items...</span>
+            </div>
+          ) : paginatedProducts.length === 0 ? (
+            <div className="py-16 text-center text-[var(--mute)] px-4">
+              <p className="font-semibold text-base text-[var(--ink)]">No products match your filters</p>
+              <p className="text-xs mt-1">Try resetting search keywords or category filters.</p>
+            </div>
+          ) : (
+            paginatedProducts.map((p) => {
+              const pr = p.price || 0;
+              const wasPr = p.was;
+              const cg = p.cogs ?? Math.round(pr * 0.55);
+              const profit = pr - cg;
+              const margin = pr > 0 ? (profit / pr) * 100 : 0;
+              const stockQty = p.stock ?? 12;
+              const lowThresh = p.lowStockThreshold ?? 5;
+              const primaryColor = p.colors?.[0] || 'violet';
+
+              return (
+                <div key={`mob-${p.id}`} className="p-4 space-y-3.5 hover:bg-brand/5 transition-colors">
+                  {/* Top Row: Thumbnail + Title + Status */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--surface2)] border border-purple-500/20 overflow-hidden flex-shrink-0 flex items-center justify-center relative">
+                      {p.images && p.images.length > 0 ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.images[0]}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 p-0.5">
+                          <ProductArt type={p.art || 'dress'} color={primaryColor} />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          href={`/admin/products/${p.id}`}
+                          className="font-bold text-sm text-[var(--ink)] hover:text-brand transition-colors line-clamp-1"
+                        >
+                          {p.name}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(p)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold flex-shrink-0 transition-all ${
+                            (p.status || 'active') === 'active'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                              : (p.status || 'active') === 'draft'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                              : 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/30'
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              (p.status || 'active') === 'active'
+                                ? 'bg-emerald-500'
+                                : (p.status || 'active') === 'draft'
+                                ? 'bg-amber-500'
+                                : 'bg-zinc-400'
+                            }`}
+                          />
+                          <span className="capitalize">{p.status || 'active'}</span>
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-[var(--mute)] mt-1">
+                        <span className="font-mono text-[10px] bg-purple-500/10 px-1.5 py-0.5 rounded font-bold">
+                          #{p.id}
+                        </span>
+                        <span className="capitalize">{p.cat}</span>
+                        {p.badge && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-orchid/10 text-orchid border border-orchid/20">
+                            {p.badge}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pricing & Profit Grid */}
+                  <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[var(--surface2)]/60 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">Price</span>
+                      <div className="font-mono font-bold text-[var(--ink)]">
+                        ₦{pr.toLocaleString()}
+                      </div>
+                      {wasPr && wasPr > pr ? (
+                        <div className="text-[10px] text-[var(--mute)] line-through">
+                          ₦{wasPr.toLocaleString()}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">COGS / Margin</span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                            margin >= 40
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                              : margin >= 20
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                          }`}
+                        >
+                          {margin.toFixed(0)}%
+                        </span>
+                        <span className="text-[11px] font-mono font-semibold text-emerald-500">
+                          +₦{profit.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stock Bar & Actions Row */}
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between text-[11px] font-mono font-semibold mb-1">
+                        <span>{stockQty} in stock</span>
+                        {stockQty === 0 ? (
+                          <span className="text-rose-500 text-[10px]">Out</span>
+                        ) : stockQty <= lowThresh ? (
+                          <span className="text-amber-500 text-[10px]">Low</span>
+                        ) : (
+                          <span className="text-emerald-500 text-[10px]">OK</span>
+                        )}
+                      </div>
+                      <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div
+                          style={{ width: `${Math.min(100, (stockQty / 30) * 100)}%` }}
+                          className={`h-full rounded-full ${
+                            stockQty === 0
+                              ? 'bg-rose-500'
+                              : stockQty <= lowThresh
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Touch Action Buttons (min 44px touch) */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Link
+                        href={`/admin/products/${p.id}`}
+                        className="p-2.5 rounded-xl text-[var(--ink2)] hover:text-brand bg-[var(--surface2)] hover:bg-brand/10 transition-colors"
+                        title="Edit Product"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicate(p)}
+                        className="p-2.5 rounded-xl text-[var(--ink2)] hover:text-orchid bg-[var(--surface2)] hover:bg-orchid/10 transition-colors"
+                        title="Duplicate as Draft"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(p.id, p.name)}
+                        className="p-2.5 rounded-xl text-[var(--ink2)] hover:text-rose-500 bg-[var(--surface2)] hover:bg-rose-500/10 transition-colors"
+                        title="Delete Product"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop / Tablet Table (Hidden on Mobile) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-purple-500/10 bg-[var(--surface2)]/60 text-[11px] font-bold text-[var(--mute)] uppercase tracking-wider">

@@ -272,3 +272,18 @@ export function formatAdminRole(role: AdminRole): string {
       return 'Admin';
   }
 }
+
+export interface StaffMember {
+  id: string;
+  email: string;
+  name: string;
+  role: AdminRole;
+  roleTitle: string;
+  department: string;
+  phone?: string;
+  avatar?: string;
+  status: 'active' | 'suspended';
+  createdAt: string;
+  lastSignInAt?: string;
+  createdBy?: string;
+}

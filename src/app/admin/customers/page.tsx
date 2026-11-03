@@ -282,7 +282,121 @@ export default function AdminCustomersPage() {
 
       {/* CRM Customer Directory Table */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--line)] overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Responsive Customer Cards */}
+        <div className="md:hidden divide-y divide-[var(--line)]">
+          {isLoading ? (
+            <div className="py-12 text-center text-[var(--mute)]">
+              <RefreshCw className="w-6 h-6 text-brand mx-auto mb-2 animate-spin opacity-80" />
+              <p className="font-semibold text-sm text-[var(--ink)]">Loading live CRM data...</p>
+            </div>
+          ) : filteredCustomers.length === 0 ? (
+            <div className="py-12 text-center text-[var(--mute)] px-4">
+              <Users className="w-8 h-8 text-brand mx-auto mb-2 opacity-60" />
+              <p className="font-semibold text-sm text-[var(--ink)]">No customers found</p>
+              <p className="text-xs mt-1">Try another search or filter.</p>
+            </div>
+          ) : (
+            filteredCustomers.map((cust) => {
+              const initials = cust.name
+                .split(' ')
+                .map((n) => n[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase();
+
+              const cleanPhone = cust.phone.replace(/[^0-9]/g, '');
+              const waPhone = cleanPhone.startsWith('0')
+                ? '234' + cleanPhone.slice(1)
+                : cleanPhone.startsWith('234')
+                ? cleanPhone
+                : '234' + cleanPhone;
+
+              const careGreeting = `Hello ${cust.name}! Thank you for being a valued customer of MiCollections. How can we assist you today?`;
+              const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(careGreeting)}`;
+
+              return (
+                <div
+                  key={`mob-cust-${cust.id}`}
+                  onClick={() => setActiveDossier(cust)}
+                  className="p-4 space-y-3 hover:bg-purple-500/5 transition-colors cursor-pointer"
+                >
+                  {/* Top Row: Avatar + Name + Tier */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand/20 to-purple-600/30 text-brand border border-purple-500/20 font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-[var(--ink)] text-sm truncate">
+                          {cust.name}
+                        </div>
+                        <div className="text-[11px] text-[var(--mute)] truncate">{cust.email}</div>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {renderTierBadge(cust.tier)}
+                    </div>
+                  </div>
+
+                  {/* Metrics Strip: LTV + Orders + State */}
+                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-[var(--surface2)]/60 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">LTV Spend</span>
+                      <span className="font-extrabold font-display text-[var(--ink)] text-xs">
+                        {money(cust.lifetimeValue)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">Orders</span>
+                      <span className="font-semibold text-brand text-xs">
+                        {cust.totalOrders} total
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">Location</span>
+                      <span className="font-medium text-[var(--ink)] text-xs truncate block">
+                        {cust.state}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions Row: Phone + WhatsApp + View Dossier */}
+                  <div className="flex items-center justify-between gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+                    <a
+                      href={`tel:${cust.phone}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--surface2)] text-xs font-semibold text-[var(--ink2)] hover:text-brand transition-colors"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-brand" />
+                      <span>{cust.phone}</span>
+                    </a>
+
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#25D366] text-white text-xs font-bold shadow-sm shadow-emerald-500/20 active:scale-95 transition-all"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 fill-white" />
+                        <span>Chat</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setActiveDossier(cust)}
+                        className="px-3 py-2 rounded-xl bg-brand/10 text-brand text-xs font-semibold hover:bg-brand hover:text-white transition-colors"
+                      >
+                        Dossier
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop / Tablet Table (Hidden on Mobile) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-[var(--line)] bg-[var(--surface2)]/60 text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
@@ -439,7 +553,7 @@ export default function AdminCustomersPage() {
       {/* Customer Dossier Drawer/Modal */}
       {activeDossier && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-lg bg-[var(--surface)] text-[var(--ink)] rounded-3xl border border-purple-500/20 shadow-2xl p-6 overflow-hidden">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--surface)] text-[var(--ink)] rounded-3xl border border-purple-500/20 shadow-2xl p-5 sm:p-6">
             <div className="flex items-center justify-between pb-4 border-b border-[var(--line)]">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-brand/20 text-brand border border-purple-500/30 flex items-center justify-center font-bold text-base">

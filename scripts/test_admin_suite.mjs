@@ -16,10 +16,12 @@ const routes = [
   'http://localhost:3000/admin/customers',
   'http://localhost:3000/admin/discounts',
   'http://localhost:3000/admin/notifications',
+  'http://localhost:3000/admin/staff',
   'http://localhost:3000/api/admin/analytics',
   'http://localhost:3000/api/admin/products',
   'http://localhost:3000/api/admin/customers',
   'http://localhost:3000/api/admin/notifications',
+  'http://localhost:3000/api/admin/staff',
   'http://localhost:3000/api/orders',
 ];
 

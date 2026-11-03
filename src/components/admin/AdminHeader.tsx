@@ -202,6 +202,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         return 'Promotions & Coupons';
       case 'notifications':
         return 'Broadcasts & Alerts';
+      case 'staff':
+        return 'Staff & Team Access';
       default:
         return sub.charAt(0).toUpperCase() + sub.slice(1);
     }

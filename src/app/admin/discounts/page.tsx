@@ -256,7 +256,114 @@ export default function AdminDiscountsPage() {
 
       {/* Coupons Table */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--line)] overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Responsive Coupon Cards */}
+        <div className="md:hidden divide-y divide-[var(--line)]">
+          {filteredCoupons.length === 0 ? (
+            <div className="py-12 text-center text-[var(--mute)] px-4">
+              <AlertCircle className="w-8 h-8 text-brand mx-auto mb-2 opacity-60" />
+              <p className="font-semibold text-sm text-[var(--ink)]">No promo codes found</p>
+              <p className="text-xs mt-1">Try another search term or create a new code.</p>
+            </div>
+          ) : (
+            filteredCoupons.map((coupon) => {
+              const percentageUsed = coupon.usageLimit
+                ? Math.round((coupon.usageCount / coupon.usageLimit) * 100)
+                : 0;
+
+              return (
+                <div key={`mob-coup-${coupon.id}`} className="p-4 space-y-3 hover:bg-purple-500/5 transition-colors">
+                  {/* Top Row: Code Badge + Value + Status Toggle */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-sm text-brand px-2.5 py-1 rounded-lg bg-brand/10 border border-brand/20">
+                          {coupon.code}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(coupon.code)}
+                          title="Copy Code"
+                          className="text-[var(--mute)] hover:text-brand transition-colors p-1"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                        {copiedCode === coupon.code && (
+                          <span className="text-[10px] text-emerald-500 font-bold">Copied!</span>
+                        )}
+                      </div>
+                      {coupon.description && (
+                        <p className="text-[11px] text-[var(--mute)] mt-1 line-clamp-1">
+                          {coupon.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleActive(coupon.id)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
+                        coupon.isActive
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                          : 'bg-zinc-500/10 text-zinc-500 border border-zinc-500/20'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          coupon.isActive ? 'bg-emerald-500' : 'bg-zinc-400'
+                        }`}
+                      />
+                      <span>{coupon.isActive ? 'Active' : 'Disabled'}</span>
+                    </button>
+                  </div>
+
+                  {/* Value & Metrics Grid */}
+                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-[var(--surface2)]/60 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">Discount</span>
+                      <span className="font-bold font-display text-sm text-[var(--ink)]">
+                        {coupon.type === 'percentage' ? `${coupon.value}% OFF` : `${money(coupon.value)} OFF`}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">Redemptions</span>
+                      <span className="font-semibold text-brand text-xs">
+                        {coupon.usageCount} {coupon.usageLimit ? `/ ${coupon.usageLimit}` : 'uses'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[var(--mute)] block">Revenue</span>
+                      <span className="font-extrabold font-display text-emerald-600 dark:text-emerald-400 text-xs">
+                        {money(coupon.revenueDriven)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Expiry & Delete Row */}
+                  <div className="flex items-center justify-between text-xs text-[var(--mute)] pt-1">
+                    <span className="flex items-center gap-1 text-[11px]">
+                      <Calendar className="w-3 h-3 text-brand" />
+                      Expires: {coupon.expiryDate}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(coupon.id, coupon.code)}
+                      className="p-2 rounded-xl text-[var(--mute)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                      title="Delete Promo Code"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop / Tablet Table (Hidden on Mobile) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-[var(--line)] bg-[var(--surface2)]/60 text-[var(--mute)] font-bold uppercase tracking-wider text-[11px]">
@@ -401,7 +508,7 @@ export default function AdminDiscountsPage() {
       {/* Create Coupon Drawer / Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-lg bg-[var(--surface)] text-[var(--ink)] rounded-3xl border border-purple-500/20 shadow-2xl p-6 sm:p-7 overflow-hidden">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--surface)] text-[var(--ink)] rounded-3xl border border-purple-500/20 shadow-2xl p-5 sm:p-7">
             <div className="flex items-center justify-between pb-4 border-b border-[var(--line)]">
               <div>
                 <h3 className="text-xl font-bold font-display tracking-tight text-[var(--ink)]">

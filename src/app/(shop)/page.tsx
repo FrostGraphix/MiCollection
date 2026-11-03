@@ -140,7 +140,7 @@ export default function HomePage() {
         <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-brand/30 rounded-full blur-[90px] pointer-events-none -z-10" />
         <div className="absolute bottom-[-80px] left-[-100px] w-[420px] h-[420px] bg-orchid/20 rounded-full blur-[80px] pointer-events-none -z-10" />
 
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Hero Copy */}
           <div className="lg:col-span-7 flex flex-col gap-6 items-start">
             <div className="inline-flex items-center gap-2.5 text-xs font-semibold uppercase tracking-widest text-brand bg-[var(--pill)] px-3.5 py-1.5 rounded-full">
@@ -299,7 +299,7 @@ export default function HomePage() {
       </section>
 
       {/* Stacked Category Cards: Shop by world */}
-      <section className="max-w-7xl mx-auto px-6 w-full">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-brand rv">
@@ -319,7 +319,7 @@ export default function HomePage() {
 
       {/* Picks of the Week: Dual-Row Horizontal Sliding Shelves */}
       <section className="w-full overflow-hidden py-4">
-        <div className="max-w-7xl mx-auto px-6 mb-8 flex items-end justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8 flex items-end justify-between gap-6">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-brand rv">
               Picks of the Week
@@ -366,7 +366,7 @@ export default function HomePage() {
 
       {/* Pinned How It Works Screen */}
       <section className="bg-[var(--bg2)] py-16 md:py-24 border-y border-[var(--line)]">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="mb-12">
             <span className="text-xs font-semibold uppercase tracking-wider text-brand rv">
               How It Works
@@ -381,12 +381,12 @@ export default function HomePage() {
       </section>
 
       {/* Budget Finds Shelf */}
-      <section className="max-w-7xl mx-auto px-6 w-full">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <BudgetShelf />
       </section>
 
       {/* Screenshot Sourcing Banner */}
-      <section className="max-w-7xl mx-auto px-6 w-full">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <div className="rounded-[40px] bg-gradient-to-br from-[#2e1065] via-[#1b073b] to-[#12041f] text-white p-8 sm:p-12 md:p-16 relative overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl">
           <div className="md:col-span-7 flex flex-col gap-4 relative z-10">
             <span className="text-xs font-semibold uppercase tracking-widest text-brand-light rv">
@@ -447,7 +447,7 @@ export default function HomePage() {
       </section>
 
       {/* Trust Quote & Live Statistics */}
-      <section className="max-w-5xl mx-auto px-6 text-center py-6">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 text-center py-6">
         <span className="text-xs font-semibold uppercase tracking-widest text-brand rv">
           Our Promise
         </span>

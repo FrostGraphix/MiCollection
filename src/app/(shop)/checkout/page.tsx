@@ -305,7 +305,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-[var(--mute)] mb-4">
         <Link href="/" className="hover:text-brand transition-colors">
@@ -327,7 +327,7 @@ export default function CheckoutPage() {
         {/* Left Column: 3 Steps Form */}
         <div className="lg:col-span-8 flex flex-col gap-8">
           {/* Section 1: Customer Details */}
-          <section className="p-6 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm space-y-5">
+          <section className="p-4 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm space-y-5">
             <h3 className="font-display text-xl font-bold flex items-center gap-3">
               <span className="w-8 h-8 rounded-xl bg-brand text-white flex items-center justify-center text-sm font-extrabold">
                 1
@@ -427,7 +427,7 @@ export default function CheckoutPage() {
           </section>
 
           {/* Section 2: Delivery Method */}
-          <section className="p-6 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm space-y-4">
+          <section className="p-4 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm space-y-4">
             <h3 className="font-display text-xl font-bold flex items-center gap-3">
               <span className="w-8 h-8 rounded-xl bg-brand text-white flex items-center justify-center text-sm font-extrabold">
                 2
@@ -444,7 +444,7 @@ export default function CheckoutPage() {
                     : 'border-[var(--line)] hover:border-brand/40'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <input
                     type="radio"
                     name="delivery"
@@ -458,7 +458,7 @@ export default function CheckoutPage() {
                     <small className="text-xs text-[var(--mute)]">1 to 2 working days within FCT Abuja</small>
                   </div>
                 </div>
-                <span className="font-display font-bold text-sm">
+                <span className="font-display font-bold text-sm flex-shrink-0 text-right pl-2">
                   {feeOf('abuja') === 0 ? 'Free' : money(feeOf('abuja'))}
                 </span>
               </label>
@@ -471,7 +471,7 @@ export default function CheckoutPage() {
                     : 'border-[var(--line)] hover:border-brand/40'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <input
                     type="radio"
                     name="delivery"
@@ -488,7 +488,7 @@ export default function CheckoutPage() {
                     <small className="text-xs text-[var(--mute)]">2 to 5 working days to all other states</small>
                   </div>
                 </div>
-                <span className="font-display font-bold text-sm">
+                <span className="font-display font-bold text-sm flex-shrink-0 text-right pl-2">
                   {feeOf('nationwide') === 0 ? 'Free' : money(feeOf('nationwide'))}
                 </span>
               </label>
@@ -501,7 +501,7 @@ export default function CheckoutPage() {
                     : 'border-[var(--line)] hover:border-brand/40'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <input
                     type="radio"
                     name="delivery"
@@ -515,13 +515,13 @@ export default function CheckoutPage() {
                     <small className="text-xs text-[var(--mute)]">Ready same day at our store</small>
                   </div>
                 </div>
-                <span className="font-display font-bold text-sm text-green-600">Free</span>
+                <span className="font-display font-bold text-sm text-green-600 flex-shrink-0 text-right pl-2">Free</span>
               </label>
             </div>
           </section>
 
           {/* Section 3: Payment Method */}
-          <section className="p-6 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm space-y-4">
+          <section className="p-4 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-sm space-y-4">
             <h3 className="font-display text-xl font-bold flex items-center gap-3">
               <span className="w-8 h-8 rounded-xl bg-brand text-white flex items-center justify-center text-sm font-extrabold">
                 3
@@ -538,7 +538,7 @@ export default function CheckoutPage() {
                     : 'border-[var(--line)] hover:border-brand/40'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <input
                     type="radio"
                     name="payment"
@@ -562,7 +562,7 @@ export default function CheckoutPage() {
                     : 'border-[var(--line)] hover:border-brand/40'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <input
                     type="radio"
                     name="payment"
@@ -588,7 +588,7 @@ export default function CheckoutPage() {
                     : 'border-[var(--line)] hover:border-brand/40 cursor-pointer'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <input
                     type="radio"
                     name="payment"
@@ -625,7 +625,7 @@ export default function CheckoutPage() {
 
         {/* Right Sticky Order Summary */}
         <aside
-          className="lg:col-span-4 lg:sticky lg:top-24 p-6 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-xl flex flex-col gap-6"
+          className="lg:col-span-4 lg:sticky lg:top-24 p-4 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-xl flex flex-col gap-6"
           style={{ boxShadow: 'var(--shadow)' }}
         >
           <h3 className="font-display text-xl font-bold">Your Order</h3>

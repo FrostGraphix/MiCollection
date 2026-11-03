@@ -111,7 +111,7 @@ function ShopContent() {
   }, [categories, selectedCat]);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-[var(--mute)] mb-4">
         <Link href="/" className="hover:text-brand transition-colors">
@@ -364,7 +364,7 @@ function ShopContent() {
 
 export default function ShopPage() {
   return (
-    <Suspense fallback={<div className="max-w-7xl mx-auto px-6 py-12">Loading products...</div>}>
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">Loading products...</div>}>
       <ShopContent />
     </Suspense>
   );

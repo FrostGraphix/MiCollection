@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className="bg-[var(--inv)] text-[var(--inv-ink)] pt-16 md:pt-24 mt-20 rounded-t-[44px] overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-16 border-b border-white/10">
           {/* Brand Info */}
           <div className="flex flex-col gap-4">

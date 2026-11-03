@@ -15,6 +15,7 @@ import {
   ChevronRight,
   X,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import { getAdminSession, AdminUser } from '@/lib/adminAuth';
 
@@ -66,6 +67,11 @@ const NAV_ITEMS: NavItem[] = [
     name: 'Emails & Alerts',
     href: '/admin/notifications',
     icon: Bell,
+  },
+  {
+    name: 'Staff & Roles',
+    href: '/admin/staff',
+    icon: ShieldCheck,
   },
 ];
 

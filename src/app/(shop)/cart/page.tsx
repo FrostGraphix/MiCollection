@@ -62,7 +62,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-[var(--mute)] mb-4">
         <Link href="/" className="hover:text-brand transition-colors">
@@ -120,10 +120,10 @@ export default function CartPage() {
 
                 {/* Controls & Price */}
                 <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                  <div className="inline-flex items-center border border-[var(--line)] rounded-full h-9 px-2 bg-[var(--surface)]">
+                  <div className="inline-flex items-center border border-[var(--line)] rounded-full h-10 px-2 bg-[var(--surface)]">
                     <button
                       onClick={() => setQty(k, item.qty - 1)}
-                      className="w-6 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
+                      className="w-8 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
                       aria-label="Decrease quantity"
                     >
                       <Minus className="w-3.5 h-3.5" />
@@ -133,7 +133,7 @@ export default function CartPage() {
                     </span>
                     <button
                       onClick={() => setQty(k, item.qty + 1)}
-                      className="w-6 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
+                      className="w-8 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
                       aria-label="Increase quantity"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -170,7 +170,7 @@ export default function CartPage() {
 
         {/* Right Sticky Order Summary */}
         <aside
-          className="lg:col-span-4 lg:sticky lg:top-24 p-6 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-xl flex flex-col gap-6"
+          className="lg:col-span-4 lg:sticky lg:top-24 p-4 sm:p-8 rounded-3xl bg-[var(--surface)] border border-[var(--line)] shadow-xl flex flex-col gap-6"
           style={{ boxShadow: 'var(--shadow)' }}
         >
           <h3 className="font-display text-xl font-bold">Order Summary</h3>
