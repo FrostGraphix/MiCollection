@@ -23,6 +23,8 @@ import { ColorKey, Product } from '@/types';
 import { ProductImage } from '@/components/shop/ProductImage';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { useCart } from '@/context/CartContext';
+import { DeliveryEstimator } from '@/components/shop/DeliveryEstimator';
+import { ProductReviews } from '@/components/shop/ProductReviews';
 import { useWishlist } from '@/context/WishlistContext';
 import { flyToCart } from '@/lib/effects';
 
@@ -492,6 +494,14 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
+          {/* Live Doorstep Delivery Estimator */}
+          <div className="pt-2">
+            <DeliveryEstimator
+              cartTotal={currentProduct.price * quantity}
+              compact={false}
+            />
+          </div>
+
           {/* Accordions */}
           <div className="divide-y divide-[var(--line)] border-y border-[var(--line)] pt-2">
             {/* Features Accordion */}
@@ -597,6 +607,12 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Verified Customer Reviews & Fit Guide */}
+      <ProductReviews
+        productId={currentProduct.id}
+        productName={currentProduct.name}
+      />
 
       {/* Lightbox Modal for High-Resolution Inspection */}
       {isZoomOpen && (

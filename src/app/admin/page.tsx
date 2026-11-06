@@ -164,9 +164,24 @@ export default function AdminOverviewPage() {
       new CustomEvent('mc:new-order', {
         detail: {
           id: randomId,
-          amount: randomAmount,
+          name: 'Amina Danjuma',
           customer: 'Amina Danjuma',
+          phone: '+234 802 345 6789',
+          email: 'amina.danjuma@gmail.com',
+          address: 'Plot 412 Maitama Boulevard',
           city: 'Maitama, Abuja',
+          state: 'Abuja FCT',
+          landmark: 'Opposite Transcorp Hilton',
+          amount: randomAmount,
+          paymentMethod: 'transfer',
+          paymentStatus: 'paid',
+          orderStatus: 'received',
+          deliveryLabel: 'Abuja Same-Day Doorstep Courier',
+          eta: 'Today within 4 hours',
+          items: [
+            { name: 'Royal Emerald Velvet Abaya', price: randomAmount, qty: 1, color: 'Emerald Green', opt: 'Medium' },
+          ],
+          createdAt: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
         },
       })
     );

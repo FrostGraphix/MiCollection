@@ -7,7 +7,10 @@ import { useAuth } from '@/context/AuthContext';
 import { OrderTrackingInfo, TrackingMilestone } from '@/types';
 import { money, waLink } from '@/lib/utils';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { OrderReceiptModal, OrderReceiptData } from '@/components/shop/OrderReceiptModal';
 import {
+  FileText,
+  Printer,
   Search,
   Truck,
   CheckCircle2,
@@ -48,6 +51,7 @@ function TrackOrderContent() {
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [trackingData, setTrackingData] = useState<OrderTrackingInfo | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -293,6 +297,15 @@ function TrackOrderContent() {
                 <span className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[var(--surface2)] text-[var(--mute)]">
                   {trackingData.deliveryLabel}
                 </span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsReceiptModalOpen(true)}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold bg-brand/10 hover:bg-brand/20 text-brand border border-brand/25 transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Official Receipt</span>
+                </button>
               </div>
             </div>
 
@@ -530,14 +543,24 @@ function TrackOrderContent() {
 
             {/* Quick Action Footer */}
             <div className="pt-4 border-t border-[var(--line)] flex flex-wrap items-center justify-between gap-3">
-              <a
-                href={trackingData.waSupportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-wa text-xs py-2.5 px-4 inline-flex items-center gap-2 font-semibold"
-              >
-                <MessageSquare className="w-4 h-4 fill-white" /> Live Dispatch WhatsApp Support
-              </a>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsReceiptModalOpen(true)}
+                  className="btn-primary text-xs py-2.5 px-4 inline-flex items-center gap-2 font-semibold shadow-md"
+                >
+                  <FileText className="w-4 h-4" /> Download Official Receipt / Invoice
+                </button>
+
+                <a
+                  href={trackingData.waSupportUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-wa text-xs py-2.5 px-4 inline-flex items-center gap-2 font-semibold"
+                >
+                  <MessageSquare className="w-4 h-4 fill-white" /> Live WhatsApp Dispatch Desk
+                </a>
+              </div>
 
               <Link
                 href="/shop"
@@ -547,6 +570,37 @@ function TrackOrderContent() {
               </Link>
             </div>
           </div>
+
+          {/* Official Invoice & Receipt Generator Modal */}
+          {trackingData && (
+            <OrderReceiptModal
+              isOpen={isReceiptModalOpen}
+              onClose={() => setIsReceiptModalOpen(false)}
+              order={{
+                orderId: trackingData.orderId,
+                createdAt: trackingData.createdAt || 'Today',
+                customerName: trackingData.destination?.name || 'Valued Client',
+                phone: trackingData.riderPhone || '',
+                address: trackingData.destination?.addressMasked || trackingData.destination?.city || 'Nigeria',
+                state: trackingData.destination?.state || 'Abuja FCT',
+                deliveryLabel: trackingData.deliveryLabel || 'Abuja Doorstep Delivery',
+                eta: trackingData.eta || '1 to 2 working days',
+                paymentMethod: trackingData.paymentMethod || 'transfer',
+                paymentStatus: trackingData.paymentStatus || 'paid',
+                items: (trackingData.items || []).map((it) => ({
+                  name: it.name,
+                  price: it.price,
+                  qty: it.qty,
+                  color: it.color,
+                  opt: it.opt,
+                })),
+                subtotal: Number(trackingData.subtotal || trackingData.total || 0),
+                deliveryFee: Number(trackingData.fee || 0),
+                discount: Number(trackingData.discount || 0),
+                total: Number(trackingData.total || 0),
+              }}
+            />
+          )}
         </div>
       )}
     </div>

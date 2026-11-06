@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag, Share2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { byId, CFG, PAL, PRODUCTS } from '@/lib/products';
 import { lineKey, money } from '@/lib/utils';
 import { ProductImage } from './ProductImage';
 import { ProductArt } from './ProductArt';
+import { ShareCartModal } from './ShareCartModal';
+import { DeliveryEstimator } from './DeliveryEstimator';
 
 export const CartDrawer: React.FC = () => {
   const pathname = usePathname();
@@ -23,6 +25,8 @@ export const CartDrawer: React.FC = () => {
     removeItem,
     addToCart,
   } = useCart();
+
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -69,11 +73,11 @@ export const CartDrawer: React.FC = () => {
         if (e.target === e.currentTarget) closeDrawer();
       }}
     >
-      {/* Scrim backdrop */}
+      {/* Backdrop */}
       <div
-        onClick={closeDrawer}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
         aria-hidden="true"
+        onClick={closeDrawer}
       />
 
       {/* Drawer Panel */}
@@ -139,26 +143,31 @@ export const CartDrawer: React.FC = () => {
                       />
                     </Link>
 
-                    {/* Details */}
+                    {/* Item Details */}
                     <div className="flex-1 min-w-0">
                       <Link
                         href={`/product/${product.id}`}
                         onClick={closeDrawer}
-                        className="font-display font-semibold text-sm hover:text-brand line-clamp-1"
+                        className="font-display font-semibold text-sm hover:text-brand transition-colors line-clamp-1"
                       >
                         {product.name}
                       </Link>
+
                       <div className="text-xs text-[var(--mute)] mt-0.5">
                         {PAL[item.color]?.n || item.color}
                         {item.size ? ` / ${item.size}` : ''}
                       </div>
 
-                      {/* Quantity Stepper & Remove */}
-                      <div className="flex items-center gap-3 mt-2.5">
-                        <div className="inline-flex items-center border border-[var(--line)] rounded-full h-7 px-1 bg-[var(--surface2)]">
+                      <div className="font-display font-bold text-sm mt-1.5">
+                        {money(product.price * item.qty)}
+                      </div>
+
+                      {/* Stepper & Remove */}
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="inline-flex items-center border border-[var(--line)] rounded-full h-8 px-1.5 bg-[var(--surface2)]">
                           <button
                             onClick={() => setQty(k, item.qty - 1)}
-                            className="w-5 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
+                            className="w-6 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="w-3 h-3" />
@@ -168,7 +177,7 @@ export const CartDrawer: React.FC = () => {
                           </span>
                           <button
                             onClick={() => setQty(k, item.qty + 1)}
-                            className="w-5 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
+                            className="w-6 h-full flex items-center justify-center text-[var(--mute)] hover:text-brand"
                             aria-label="Increase quantity"
                           >
                             <Plus className="w-3 h-3" />
@@ -184,32 +193,25 @@ export const CartDrawer: React.FC = () => {
                         </button>
                       </div>
                     </div>
-
-                    {/* Line Total */}
-                    <div className="text-right">
-                      <span className="font-display font-bold text-sm">
-                        {money(product.price * item.qty)}
-                      </span>
-                    </div>
                   </div>
                 );
               })}
             </div>
           )}
 
-          {/* Upsells */}
+          {/* Upsell Recommendations Shelf */}
           {cart.length > 0 && upsellItems.length > 0 && (
             <div className="pt-4 border-t border-[var(--line)]">
-              <h5 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--mute)] mb-2.5">
-                Add a little extra
-              </h5>
+              <span className="text-xs font-semibold text-[var(--mute)] block mb-3">
+                Quick additions before checkout:
+              </span>
               <div className="space-y-2">
                 {upsellItems.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between gap-3 p-2 rounded-xl bg-[var(--surface2)] border border-[var(--line)]"
+                    className="p-2.5 rounded-2xl bg-[var(--surface2)] flex items-center justify-between gap-3 border border-[var(--line)] hover:border-brand/30 transition-all"
                   >
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--surface)] relative">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[var(--surface)] flex-shrink-0 relative">
                       <ProductImage
                         src={p.images?.[0]}
                         alt={p.name}
@@ -270,9 +272,10 @@ export const CartDrawer: React.FC = () => {
               <span>{money(subtotal - discount)}</span>
             </div>
 
-            <p className="text-[11px] text-[var(--mute)]">
-              Delivery fees and promo discounts are calculated at checkout.
-            </p>
+            {/* Compact Nigerian Delivery Estimator */}
+            <div className="py-0.5">
+              <DeliveryEstimator cartTotal={subtotal - discount} compact={true} />
+            </div>
 
             <div className="grid grid-cols-2 gap-2.5 pt-1">
               <Link
@@ -280,7 +283,7 @@ export const CartDrawer: React.FC = () => {
                 onClick={closeDrawer}
                 className="btn-ghost text-xs py-3 text-center"
               >
-                View Full Cart
+                View Cart
               </Link>
               <Link
                 href="/checkout"
@@ -290,8 +293,24 @@ export const CartDrawer: React.FC = () => {
                 Checkout <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="w-full py-2.5 px-3 rounded-full bg-brand/10 hover:bg-brand/15 text-brand font-bold text-[11px] border border-brand/20 transition-all flex items-center justify-center gap-1.5"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Share Bag with Sponsor / Partner
+            </button>
           </div>
         )}
+
+        {/* Social Cart Share Modal */}
+        <ShareCartModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          cart={cart}
+          subtotal={subtotal - discount}
+        />
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ interface CartContextType {
   removeItem: (key: string) => void;
   applyPromo: (code: string) => { success: boolean; message: string };
   clearCart: () => void;
+  replaceCart: (items: CartItem[]) => void;
   openDrawer: () => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
@@ -126,6 +127,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
   };
 
+  const replaceCart = (items: CartItem[]) => {
+    const valid = (items || []).filter((item) => byId(item.id) && item.qty > 0);
+    saveCart(valid);
+  };
+
   const cartCount = cart.reduce((total, item) => total + item.qty, 0);
 
   const subtotal = cart.reduce((total, item) => {
@@ -161,6 +167,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeItem,
         applyPromo,
         clearCart,
+        replaceCart,
         openDrawer,
         closeDrawer,
         toggleDrawer,

@@ -297,12 +297,14 @@ export default function AdminCustomersPage() {
             </div>
           ) : (
             filteredCustomers.map((cust) => {
-              const initials = cust.name
+              const safeCustName = String(cust.name || 'MC').trim();
+              const initials = safeCustName
                 .split(' ')
+                .filter(Boolean)
                 .map((n) => n[0])
                 .join('')
                 .slice(0, 2)
-                .toUpperCase();
+                .toUpperCase() || 'MC';
 
               const cleanPhone = cust.phone.replace(/[^0-9]/g, '');
               const waPhone = cleanPhone.startsWith('0')

@@ -436,12 +436,14 @@ export default function AdminOrdersPage() {
             </div>
           ) : (
             filteredOrders.map((order) => {
-              const initials = order.name
+              const safeName = String(order.name || 'MC').trim();
+              const initials = safeName
                 .split(' ')
+                .filter(Boolean)
                 .map((n) => n[0])
                 .join('')
                 .slice(0, 2)
-                .toUpperCase();
+                .toUpperCase() || 'MC';
               const isPaid = order.paymentStatus === 'paid';
               const waPhone = order.phone.replace(/^0/, '234').replace(/[^0-9]/g, '');
 

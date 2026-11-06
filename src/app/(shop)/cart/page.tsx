@@ -1,13 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Minus, Trash2, ArrowRight, ArrowLeft, MessageSquare } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import {
+  Plus,
+  Minus,
+  Trash2,
+  ArrowRight,
+  ArrowLeft,
+  MessageSquare,
+  Share2,
+  Sparkles,
+} from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { byId, CFG, PAL } from '@/lib/products';
 import { lineKey, money, generateOrderText, waLink } from '@/lib/utils';
 import { ProductArt } from '@/components/shop/ProductArt';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { ShareCartModal, decodeSharedCart } from '@/components/shop/ShareCartModal';
+import { DeliveryEstimator } from '@/components/shop/DeliveryEstimator';
 
 export default function CartPage() {
   const {
@@ -19,13 +31,35 @@ export default function CartPage() {
     setQty,
     removeItem,
     applyPromo,
+    replaceCart,
   } = useCart();
+
+  const searchParams = useSearchParams();
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [restoredBanner, setRestoredBanner] = useState<string | null>(null);
 
   const [inputCode, setInputCode] = useState(promoCode);
   const [promoMessage, setPromoMessage] = useState<{
     text: string;
     isError: boolean;
   } | null>(null);
+
+  // Restore cart from ?share=... query parameter if present
+  useEffect(() => {
+    const shareParam = searchParams.get('share');
+    if (shareParam) {
+      const decoded = decodeSharedCart(shareParam);
+      if (decoded.length > 0) {
+        replaceCart(decoded);
+        setRestoredBanner(
+          `Loaded ${decoded.length} shared bespoke ${
+            decoded.length === 1 ? 'item' : 'items'
+          } from partner link!`
+        );
+        setTimeout(() => setRestoredBanner(null), 8000);
+      }
+    }
+  }, [searchParams, replaceCart]);
 
   const freeThreshold = CFG.freeOver;
   const currentTotal = subtotal - discount;
@@ -72,9 +106,25 @@ export default function CartPage() {
         <span className="text-[var(--ink)] font-semibold">Cart</span>
       </nav>
 
-      <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight mb-8">
+      <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
         Your <em className="serif-italic">Cart</em>
       </h1>
+
+      {/* Restored from Share Link Toast Banner */}
+      {restoredBanner && (
+        <div className="mb-6 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-2.5 text-xs font-semibold">
+            <Sparkles className="w-4 h-4 text-emerald-500 animate-spin" />
+            <span>{restoredBanner}</span>
+          </div>
+          <button
+            onClick={() => setRestoredBanner(null)}
+            className="text-[11px] font-bold underline hover:opacity-80"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* Left Cart Items List */}
@@ -199,6 +249,11 @@ export default function CartPage() {
             </div>
           </div>
 
+          {/* Real-Time Nigerian Doorstep Delivery Estimator */}
+          <div className="pt-1">
+            <DeliveryEstimator cartTotal={subtotal - discount} />
+          </div>
+
           {/* Promo Code Input */}
           <div className="space-y-1.5">
             <div className="flex gap-2">
@@ -248,7 +303,7 @@ export default function CartPage() {
 
             <div className="flex justify-between">
               <span className="text-[var(--mute)]">Delivery</span>
-              <span className="text-xs text-[var(--mute)]">Calculated at checkout</span>
+              <span className="text-xs text-[var(--mute)]">Selected at checkout</span>
             </div>
 
             <div className="flex justify-between font-display text-xl font-bold pt-3 border-t border-[var(--line)]">
@@ -266,6 +321,14 @@ export default function CartPage() {
               Proceed to Checkout <ArrowRight className="w-4 h-4" />
             </Link>
 
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="px-4 py-3 rounded-full bg-gradient-to-r from-brand/15 via-orchid/15 to-brand/10 hover:from-brand/25 hover:to-orchid/20 text-brand font-bold text-xs border border-brand/25 transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Share2 className="w-4 h-4" /> Share Bag with Sponsor / Partner
+            </button>
+
             <a
               href={waLink(whatsappCartMessage)}
               target="_blank"
@@ -275,6 +338,14 @@ export default function CartPage() {
               <MessageSquare className="w-4 h-4" /> Send Cart on WhatsApp
             </a>
           </div>
+
+          {/* Social Cart Share Modal */}
+          <ShareCartModal
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            cart={cart}
+            subtotal={subtotal - discount}
+          />
         </aside>
       </div>
     </div>
