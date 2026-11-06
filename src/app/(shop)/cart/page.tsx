@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -21,7 +21,7 @@ import { ProductImage } from '@/components/shop/ProductImage';
 import { ShareCartModal, decodeSharedCart } from '@/components/shop/ShareCartModal';
 import { DeliveryEstimator } from '@/components/shop/DeliveryEstimator';
 
-export default function CartPage() {
+function CartContent() {
   const {
     cart,
     subtotal,
@@ -349,5 +349,21 @@ export default function CartPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+
+export default function CartPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-4">
+          <div className="w-10 h-10 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-[var(--mute)]">Loading your cart...</p>
+        </div>
+      }
+    >
+      <CartContent />
+    </Suspense>
   );
 }
